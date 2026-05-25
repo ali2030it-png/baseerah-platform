@@ -1,3 +1,4 @@
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { BasirahShell } from "@/components/basirah/BasirahShell";
 
 export default function DashboardLayout({
@@ -6,8 +7,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <BasirahShell>
-      {children}
-    </BasirahShell>
+    <AuthGuard>
+      <BasirahShell>{children}</BasirahShell>
+    </AuthGuard>
   );
 }
