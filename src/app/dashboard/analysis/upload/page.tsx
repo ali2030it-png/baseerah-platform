@@ -15,6 +15,11 @@ import {
   ParsedAssessmentRow,
 } from "@/lib/analysis/excel-parser";
 
+import {
+  analyzeAssessmentRows,
+  masteryLabel,
+} from "@/lib/analysis/skill-analytics";
+
 type InputMode = "excel" | "quick" | "paste" | "image";
 
 const purposeLabels: Record<string, string> = {
@@ -59,6 +64,8 @@ export default function UploadPage() {
     assessment_date: "",
   });
 
+  const analysis = useMemo(() => analyzeAssessmentRows(rows), [rows]);
+
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -98,24 +105,6 @@ export default function UploadPage() {
     });
   }
 
-  const stats = useMemo(() => {
-    const students = new Set(rows.map((row) => row.student_id || row.student_name)).size;
-    const skills = new Set(rows.map((row) => row.skill)).size;
-
-    const validRows = rows.filter((row) => row.max_score > 0);
-    const avg =
-      validRows.length === 0
-        ? "0"
-        : (
-            validRows.reduce(
-              (acc, row) => acc + (row.score / row.max_score) * 100,
-              0
-            ) / validRows.length
-          ).toFixed(1);
-
-    return { students, skills, avg };
-  }, [rows]);
-
   return (
     <main className="space-y-6">
       <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -136,7 +125,7 @@ export default function UploadPage() {
       {mode === "excel" && (
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black">رفع قالب بصيرة الموحد</h2>
-          <p className="mt-2 text-sm font-bold text-slate-500">
+          <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
             الأعمدة المطلوبة: student_name, student_id, subject, skill, learning_outcome, score, max_score, assessment_purpose, assessment_timing, national_exam_type, grade_level, class_name, assessment_date
           </p>
 
@@ -162,7 +151,6 @@ export default function UploadPage() {
             <Input label="الفصل" value={quick.class_name} onChange={(v) => setQuick({ ...quick, class_name: v })} />
             <NumberInput label="الدرجة" value={quick.score} onChange={(v) => setQuick({ ...quick, score: v })} />
             <NumberInput label="الدرجة العظمى" value={quick.max_score} onChange={(v) => setQuick({ ...quick, max_score: v })} />
-
             <Select label="غرض التقويم" value={quick.assessment_purpose} options={purposeLabels} onChange={(v) => setQuick({ ...quick, assessment_purpose: v })} />
             <Select label="توقيت الاختبار" value={quick.assessment_timing} options={timingLabels} onChange={(v) => setQuick({ ...quick, assessment_timing: v })} />
           </div>
@@ -193,7 +181,7 @@ export default function UploadPage() {
           <Camera className="mx-auto text-teal-700" size={42} />
           <h2 className="mt-4 text-2xl font-black">تصوير النتيجة</h2>
           <p className="mt-2 text-sm font-bold leading-7 text-slate-600">
-            هذه الميزة ستُفعّل لاحقًا بعد استقرار قالب الإدخال والتحليل؛ وسيتم فيها قراءة صورة كشف الدرجات تلقائيًا.
+            هذه الميزة ستُفعّل لاحقًا بعد استقرار قالب الإدخال والتحليل.
           </p>
         </section>
       )}
@@ -203,42 +191,53 @@ export default function UploadPage() {
 
       {rows.length > 0 && (
         <>
-          <section className="grid gap-4 md:grid-cols-3">
-            <Stat title="عدد الطلاب" value={stats.students} />
-            <Stat title="عدد المهارات" value={stats.skills} />
-            <Stat title="متوسط الإتقان" value={`${stats.avg}%`} />
+          <section className="grid gap-4 md:grid-cols-4">
+            <Stat title="عدد الطلاب" value={analysis.total_students} />
+            <Stat title="عدد المهارات" value={analysis.total_skills} />
+            <Stat title="متوسط الإتقان" value={`${analysis.overall_mastery}%`} />
+            <Stat title="تصنيف الأداء" value={masteryLabel(analysis.level)} />
+          </section>
+
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-black text-teal-700">التحليل التربوي</p>
+            <h2 className="mt-2 text-2xl font-black">
+              من البيانات إلى قرار تربوي
+            </h2>
+            <p className="mt-3 text-sm font-bold leading-7 text-slate-600">
+              {analysis.educational_summary}
+            </p>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              <Stat title="المهارات الحرجة" value={analysis.weak_skills.length} />
+              <Stat title="الطلاب المتعثرون" value={analysis.students_at_risk.length} />
+              <Stat title="صفوف البيانات الصحيحة" value={analysis.total_rows} />
+            </div>
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-5 text-xl font-black">معاينة البيانات</h2>
+            <h2 className="mb-5 text-xl font-black">المهارات حسب مستوى الإتقان</h2>
 
             <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="w-full min-w-[1400px] text-right text-sm">
+              <table className="w-full min-w-[900px] text-right text-sm">
                 <thead className="bg-slate-50 text-xs font-black text-slate-500">
                   <tr>
-                    <th className="p-4">الطالب</th>
                     <th className="p-4">المادة</th>
                     <th className="p-4">المهارة</th>
                     <th className="p-4">ناتج التعلم</th>
-                    <th className="p-4">الدرجة</th>
-                    <th className="p-4">العظمى</th>
-                    <th className="p-4">الغرض</th>
-                    <th className="p-4">التوقيت</th>
-                    <th className="p-4">الصف</th>
+                    <th className="p-4">متوسط الإتقان</th>
+                    <th className="p-4">التصنيف</th>
+                    <th className="p-4">عدد المتعثرين</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {rows.slice(0, 30).map((row, index) => (
+                  {analysis.skill_analysis.map((skill, index) => (
                     <tr key={index}>
-                      <td className="p-4 font-bold">{row.student_name}</td>
-                      <td className="p-4">{row.subject}</td>
-                      <td className="p-4">{row.skill}</td>
-                      <td className="p-4">{row.learning_outcome}</td>
-                      <td className="p-4 font-black text-teal-700">{row.score}</td>
-                      <td className="p-4">{row.max_score}</td>
-                      <td className="p-4">{purposeLabels[row.assessment_purpose] || row.assessment_purpose}</td>
-                      <td className="p-4">{timingLabels[row.assessment_timing] || row.assessment_timing}</td>
-                      <td className="p-4">{row.grade_level}</td>
+                      <td className="p-4">{skill.subject}</td>
+                      <td className="p-4 font-bold">{skill.skill}</td>
+                      <td className="p-4">{skill.learning_outcome}</td>
+                      <td className="p-4 font-black text-teal-700">{skill.average_mastery}%</td>
+                      <td className="p-4">{masteryLabel(skill.level)}</td>
+                      <td className="p-4">{skill.at_risk_count}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -253,10 +252,7 @@ export default function UploadPage() {
 
 function ModeButton({ active, onClick, icon, title }: { active: boolean; onClick: () => void; icon: React.ReactNode; title: string }) {
   return (
-    <button onClick={onClick} className={[
-      "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-black transition",
-      active ? "border-teal-200 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-600",
-    ].join(" ")}>
+    <button onClick={onClick} className={["flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-black transition", active ? "border-teal-200 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-600"].join(" ")}>
       {icon}
       {title}
     </button>
@@ -305,10 +301,7 @@ function Stat({ title, value }: { title: string; value: string | number }) {
 
 function Notice({ text, danger = false }: { text: string; danger?: boolean }) {
   return (
-    <section className={[
-      "rounded-[2rem] border p-5 text-sm font-black",
-      danger ? "border-rose-100 bg-rose-50 text-rose-700" : "border-slate-200 bg-white text-slate-600",
-    ].join(" ")}>
+    <section className={["rounded-[2rem] border p-5 text-sm font-black", danger ? "border-rose-100 bg-rose-50 text-rose-700" : "border-slate-200 bg-white text-slate-600"].join(" ")}>
       {text}
     </section>
   );
