@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function Page() {
-  return <div className="text-2xl font-black">رفع النتائج والتحليل</div>;
+  redirect("/dashboard/analysis/upload");
 }

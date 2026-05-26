@@ -20,7 +20,7 @@ const items = [
 
   {
     title: "رفع",
-    href: "/dashboard/analysis",
+    href: "/dashboard/analysis/upload",
     icon: FileSpreadsheet,
   },
 
@@ -76,3 +76,5 @@ export function BasirahMobileNav() {
     </nav>
   );
 }
+
+

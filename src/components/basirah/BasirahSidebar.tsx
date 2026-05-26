@@ -25,7 +25,7 @@ const items = [
 
   {
     title: "رفع النتائج",
-    href: "/dashboard/analysis",
+    href: "/dashboard/analysis/upload",
     icon: FileSpreadsheet,
   },
 
@@ -126,3 +126,5 @@ export function BasirahSidebar() {
     </aside>
   );
 }
+
+

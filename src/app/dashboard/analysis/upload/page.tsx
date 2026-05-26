@@ -6,6 +6,7 @@ import {
   ClipboardPaste,
   FileSpreadsheet,
   Keyboard,
+  Save,
   UploadCloud,
 } from "lucide-react";
 
@@ -19,6 +20,9 @@ import {
   analyzeAssessmentRows,
   masteryLabel,
 } from "@/lib/analysis/skill-analytics";
+
+import { buildAnalysisRecordPayload } from "@/lib/analysis/analysis-records";
+import { supabase } from "@/lib/supabase/client";
 
 type InputMode = "excel" | "quick" | "paste" | "image";
 
@@ -46,7 +50,9 @@ export default function UploadPage() {
   const [rows, setRows] = useState<ParsedAssessmentRow[]>([]);
   const [pasteText, setPasteText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
 
   const [quick, setQuick] = useState<ParsedAssessmentRow>({
     student_name: "",
@@ -66,16 +72,22 @@ export default function UploadPage() {
 
   const analysis = useMemo(() => analyzeAssessmentRows(rows), [rows]);
 
+  function replaceRows(nextRows: ParsedAssessmentRow[]) {
+    setRows(nextRows);
+    setSaveMessage("");
+  }
+
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setLoading(true);
     setError("");
+    setSaveMessage("");
 
     try {
       const parsed = await parseAssessmentExcel(file);
-      setRows(parsed);
+      replaceRows(parsed);
     } catch {
       setError("تعذر قراءة ملف Excel. تأكد من استخدام قالب بصيرة الموحد.");
     }
@@ -85,7 +97,7 @@ export default function UploadPage() {
 
   function handlePasteParse() {
     const parsed = parsePastedTable(pasteText);
-    setRows(parsed);
+    replaceRows(parsed);
   }
 
   function addQuickRow() {
@@ -94,7 +106,7 @@ export default function UploadPage() {
       return;
     }
 
-    setRows((current) => [...current, quick]);
+    replaceRows([...rows, quick]);
     setError("");
 
     setQuick({
@@ -103,6 +115,48 @@ export default function UploadPage() {
       student_id: "",
       score: 0,
     });
+  }
+
+  async function saveAnalysisRecord() {
+    setError("");
+    setSaveMessage("");
+
+    if (rows.length === 0 || analysis.total_rows === 0) {
+      setError("لا توجد بيانات صالحة للحفظ.");
+      return;
+    }
+
+    setSaving(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setSaving(false);
+      setError("تعذر حفظ التحليل؛ يرجى تسجيل الدخول مرة أخرى.");
+      return;
+    }
+
+    const payload = buildAnalysisRecordPayload({
+      userId: user.id,
+      rows,
+      analysis,
+    });
+
+    const { error: insertError } = await supabase
+      .from("analysis_records")
+      .insert(payload);
+
+    setSaving(false);
+
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+
+    setSaveMessage("تم حفظ التحليل بنجاح، وسيظهر في لوحة المدير وتقارير التحليلات.");
   }
 
   return (
@@ -188,6 +242,7 @@ export default function UploadPage() {
 
       {loading && <Notice text="جارٍ قراءة الملف..." />}
       {error && <Notice text={error} danger />}
+      {saveMessage && <Notice text={saveMessage} />}
 
       {rows.length > 0 && (
         <>
@@ -199,10 +254,25 @@ export default function UploadPage() {
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-black text-teal-700">التحليل التربوي</p>
-            <h2 className="mt-2 text-2xl font-black">
-              من البيانات إلى قرار تربوي
-            </h2>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-black text-teal-700">التحليل التربوي</p>
+                <h2 className="mt-2 text-2xl font-black">
+                  من البيانات إلى قرار تربوي
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={saveAnalysisRecord}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Save size={18} />
+                {saving ? "جارٍ الحفظ..." : "حفظ التحليل"}
+              </button>
+            </div>
+
             <p className="mt-3 text-sm font-bold leading-7 text-slate-600">
               {analysis.educational_summary}
             </p>

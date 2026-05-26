@@ -54,11 +54,14 @@ export async function proxy(request: NextRequest) {
     return redirectTo(request, "/pending");
   }
 
-  if (pathname.startsWith("/admin") && profile.role !== "super_admin") {
+  const isAdminPath = pathname.startsWith("/admin");
+  const isDashboardHome = pathname === "/dashboard";
+
+  if (isAdminPath && profile.role !== "super_admin") {
     return redirectTo(request, "/dashboard");
   }
 
-  if (pathname.startsWith("/dashboard") && profile.role === "super_admin") {
+  if (isDashboardHome && profile.role === "super_admin") {
     return redirectTo(request, "/admin");
   }
 

@@ -5,7 +5,7 @@ const cards = [
   {
     title: "رفع نتائج التدريب",
     desc: "ارفع ملف Excel أو CSV لبدء تحليل نافس أو القدرات أو التحصيلي.",
-    href: "/dashboard/analysis",
+    href: "/dashboard/analysis/upload",
     icon: FileSpreadsheet,
   },
   {
@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
         <div className="mt-6">
           <Link
-            href="/dashboard/analysis"
+            href="/dashboard/analysis/upload"
             className="inline-flex items-center gap-2 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white hover:bg-teal-800"
           >
             <FileSpreadsheet size={18} />
@@ -81,3 +81,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
