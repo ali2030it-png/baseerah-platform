@@ -1,12 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Loader2, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UserPlus } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
-const roles = [
+type SignupForm = {
+  full_name: string;
+  school_name: string;
+  region: string;
+  mobile: string;
+  role: string;
+  email: string;
+  password: string;
+};
+
+const roleOptions = [
   { value: "teacher_male", label: "معلم" },
   { value: "teacher_female", label: "معلمة" },
   { value: "counselor_male", label: "مرشد طلابي" },
@@ -16,150 +25,203 @@ const roles = [
 export default function SignupPage() {
   const router = useRouter();
 
-  const [fullName, setFullName] = useState("");
-  const [schoolName, setSchoolName] = useState("");
-  const [region, setRegion] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [role, setRole] = useState("teacher_male");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState<SignupForm>({
+    full_name: "",
+    school_name: "",
+    region: "",
+    mobile: "",
+    role: "teacher_male",
+    email: "",
+    password: "",
+  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  function updateField(key: keyof SignupForm, value: string) {
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
+
   async function handleSignup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
+
     setError("");
 
-    if (!fullName.trim() || !email.trim() || !password.trim()) {
-      setError("أكمل الاسم والبريد الإلكتروني وكلمة المرور.");
-      setLoading(false);
+    if (!form.full_name.trim()) {
+      setError("أدخل الاسم الكامل.");
       return;
     }
 
-    const { data, error: signupError } = await supabase.auth.signUp({
-      email,
-      password,
+    if (!form.school_name.trim()) {
+      setError("أدخل اسم المدرسة.");
+      return;
+    }
+
+    if (!form.region.trim()) {
+      setError("أدخل المنطقة أو الإدارة التعليمية.");
+      return;
+    }
+
+    if (!form.mobile.trim()) {
+      setError("أدخل رقم الجوال.");
+      return;
+    }
+
+    if (!form.email.trim() || !form.email.includes("@")) {
+      setError("أدخل بريدًا إلكترونيًا صحيحًا.");
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError("كلمة المرور يجب ألا تقل عن 6 أحرف.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error: signupError } = await supabase.auth.signUp({
+      email: form.email.trim(),
+      password: form.password,
       options: {
         data: {
-          full_name: fullName,
-          role,
-          school_name: schoolName,
-          region,
-          mobile,
+          full_name: form.full_name.trim(),
+          school_name: form.school_name.trim(),
+          region: form.region.trim(),
+          mobile: form.mobile.trim(),
+          role: form.role,
         },
       },
     });
 
-    if (signupError || !data.user) {
-      setError(signupError?.message || "تعذر إنشاء الحساب.");
-      setLoading(false);
+    setLoading(false);
+
+    if (signupError) {
+      setError(signupError.message);
       return;
     }
 
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user.id,
-      full_name: fullName,
-      email,
-      role,
-      status: "pending",
-      school_name: schoolName,
-      region,
-      mobile,
-    });
-
-    if (profileError) {
-      setError(profileError.message);
-      setLoading(false);
-      return;
-    }
-
-    router.replace("/pending");
+    router.push("/pending");
   }
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#f6f8fb] p-4 text-slate-950">
-      <section className="mx-auto grid min-h-screen max-w-6xl items-center gap-8 lg:grid-cols-[1fr_1fr]">
-        <div>
+    <main className="min-h-screen bg-[#f4f7fb] px-6 py-10">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-2">
+        <section className="order-2 text-center lg:order-1">
           <p className="text-sm font-black text-teal-700">إنشاء حساب جديد</p>
-          <h1 className="mt-3 text-4xl font-black leading-tight md:text-5xl">
+
+          <h1 className="mt-4 text-5xl font-black leading-tight text-slate-950">
             انضم إلى منصة بصيرة
           </h1>
-          <p className="mt-4 max-w-xl text-sm font-bold leading-8 text-slate-600">
-            أنشئ حسابك لاستخدام أدوات تحليل نتائج التدريب والاختبارات، وسيبقى
-            الحساب قيد المراجعة حتى يفعّله مدير النظام.
-          </p>
-        </div>
 
-        <form
-          onSubmit={handleSignup}
-          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <div className="mb-6 flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-white">
-              <UserPlus size={22} />
-            </div>
+          <p className="mx-auto mt-5 max-w-xl text-base font-bold leading-8 text-slate-600">
+            أنشئ حسابك لاستخدام أدوات تحليل نتائج التدريب والاختبارات، وسيبقى الحساب قيد المراجعة حتى يفعّله مدير النظام.
+          </p>
+        </section>
+
+        <section className="order-1 rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm lg:order-2">
+          <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-black">بيانات الانضمام</h2>
-              <p className="text-xs font-bold text-slate-500">
+              <h2 className="text-3xl font-black text-slate-950">
+                بيانات الانضمام
+              </h2>
+
+              <p className="mt-2 text-sm font-bold text-slate-500">
                 الأدوار المعتمدة: معلم، معلمة، مرشد، مرشدة
               </p>
             </div>
+
+            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-teal-700 text-white">
+              <UserPlus size={26} />
+            </div>
           </div>
 
-          <div className="grid gap-4">
-            <Field label="الاسم الكامل" value={fullName} onChange={setFullName} />
-            <Field label="اسم المدرسة" value={schoolName} onChange={setSchoolName} />
-            <Field label="المنطقة / الإدارة التعليمية" value={region} onChange={setRegion} />
-            <Field label="رقم الجوال" value={mobile} onChange={setMobile} />
+          <form onSubmit={handleSignup} className="space-y-4">
+            <Input
+              label="الاسم الكامل"
+              value={form.full_name}
+              onChange={(value) => updateField("full_name", value)}
+            />
+
+            <Input
+              label="اسم المدرسة"
+              value={form.school_name}
+              onChange={(value) => updateField("school_name", value)}
+            />
+
+            <Input
+              label="المنطقة / الإدارة التعليمية"
+              value={form.region}
+              onChange={(value) => updateField("region", value)}
+            />
+
+            <Input
+              label="رقم الجوال"
+              value={form.mobile}
+              onChange={(value) => updateField("mobile", value)}
+            />
 
             <label className="grid gap-2">
               <span className="text-sm font-black text-slate-700">الصفة</span>
+
               <select
-                value={role}
-                onChange={(event) => setRole(event.target.value)}
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-teal-600"
+                value={form.role}
+                onChange={(event) => updateField("role", event.target.value)}
+                className="h-14 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black outline-none transition focus:border-teal-600 focus:bg-white"
               >
-                {roles.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
+                {roleOptions.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
                   </option>
                 ))}
               </select>
             </label>
 
-            <Field label="البريد الإلكتروني" value={email} onChange={setEmail} type="email" />
-            <Field label="كلمة المرور" value={password} onChange={setPassword} type="password" />
+            <Input
+              label="البريد الإلكتروني"
+              type="email"
+              value={form.email}
+              onChange={(value) => updateField("email", value)}
+            />
+
+            <Input
+              label="كلمة المرور"
+              type="password"
+              value={form.password}
+              onChange={(value) => updateField("password", value)}
+            />
 
             {error && (
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-black text-rose-700">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center text-sm font-black text-rose-700">
                 {error}
               </div>
             )}
 
             <button
+              type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white hover:bg-teal-800 disabled:opacity-60"
+              className="h-14 w-full rounded-2xl bg-teal-700 text-sm font-black text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading && <Loader2 size={18} className="animate-spin" />}
-              إنشاء الحساب
+              {loading ? "جارٍ إنشاء الحساب..." : "إنشاء الحساب"}
             </button>
 
-            <p className="text-center text-sm font-bold text-slate-500">
-              لديك حساب؟{" "}
-              <Link href="/login" className="font-black text-teal-700">
-                تسجيل الدخول
-              </Link>
-            </p>
-          </div>
-        </form>
-      </section>
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              className="w-full text-center text-sm font-black text-teal-700"
+            >
+              لديك حساب؟ تسجيل الدخول
+            </button>
+          </form>
+        </section>
+      </div>
     </main>
   );
 }
 
-function Field({
+function Input({
   label,
   value,
   onChange,
@@ -173,11 +235,12 @@ function Field({
   return (
     <label className="grid gap-2">
       <span className="text-sm font-black text-slate-700">{label}</span>
+
       <input
-        value={value}
         type={type}
+        value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-teal-600"
+        className="h-14 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black outline-none transition focus:border-teal-600 focus:bg-white"
       />
     </label>
   );

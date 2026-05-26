@@ -1,224 +1,247 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Search, ShieldCheck, XCircle } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { roleLabel, statusLabel } from "@/lib/auth/roles";
 
 type Profile = {
   id: string;
-  full_name: string;
-  email: string;
-  role: string;
-  status: string;
-  school_name: string | null;
-  region: string | null;
+  full_name: string | null;
+  email: string | null;
+  role: string | null;
+  status: string | null;
   mobile: string | null;
-  created_at: string;
+  region: string | null;
+  school_name: string | null;
+  created_at: string | null;
 };
 
-function roleLabel(role: string) {
-  if (role === "teacher_male") return "معلم";
-  if (role === "teacher_female") return "معلمة";
-  if (role === "counselor_male") return "مرشد طلابي";
-  if (role === "counselor_female") return "مرشدة طلابية";
-  if (role === "admin") return "مدير النظام";
-  return role;
-}
-
-function statusLabel(status: string) {
-  if (status === "pending") return "قيد المراجعة";
-  if (status === "active") return "مفعّل";
-  if (status === "rejected") return "مرفوض";
-  if (status === "suspended") return "معلّق";
-  return status;
-}
+const statusActions = [
+  { value: "active", label: "تفعيل" },
+  { value: "suspended", label: "تعطيل" },
+  { value: "rejected", label: "رفض" },
+  { value: "pending", label: "إعادة للمراجعة" },
+];
 
 export default function AdminUsersPage() {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
 
-  async function loadProfiles() {
+  async function loadUsers() {
     setLoading(true);
+    setError("");
 
-    const { data, error } = await supabase
+    const { data, error: loadError } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id,full_name,email,role,status,mobile,region,school_name,created_at")
       .order("created_at", { ascending: false });
 
-    if (!error) {
-      setProfiles(data || []);
+    setLoading(false);
+
+    if (loadError) {
+      setError(loadError.message);
+      return;
     }
 
-    setLoading(false);
+    setUsers(data || []);
   }
 
-  async function updateStatus(id: string, status: "active" | "rejected" | "suspended") {
-    const { error } = await supabase
+  async function updateStatus(id: string, status: string) {
+    setError("");
+
+    const { error: updateError } = await supabase
       .from("profiles")
-      .update({ status })
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id);
 
-    if (!error) {
-      await loadProfiles();
+    if (updateError) {
+      setError(updateError.message);
+      return;
     }
+
+    setUsers((current) =>
+      current.map((user) =>
+        user.id === id ? { ...user, status } : user
+      )
+    );
   }
 
   useEffect(() => {
-    loadProfiles();
+    loadUsers();
   }, []);
 
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
+  const filteredUsers = useMemo(() => {
+    const text = query.trim().toLowerCase();
 
-    if (!term) return profiles;
+    if (!text) return users;
 
-    return profiles.filter((profile) =>
-      [
-        profile.full_name,
-        profile.email,
-        profile.role,
-        profile.status,
-        profile.school_name,
-        profile.region,
-        profile.mobile,
+    return users.filter((user) => {
+      return [
+        user.full_name,
+        user.email,
+        user.mobile,
+        user.region,
+        user.school_name,
+        roleLabel(user.role || ""),
+        statusLabel(user.status || ""),
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
-        .includes(term)
-    );
-  }, [profiles, query]);
+        .includes(text);
+    });
+  }, [users, query]);
 
-  const stats = {
-    total: profiles.length,
-    pending: profiles.filter((p) => p.status === "pending").length,
-    active: profiles.filter((p) => p.status === "active").length,
-    teachers: profiles.filter((p) => p.role === "teacher_male" || p.role === "teacher_female").length,
-    counselors: profiles.filter((p) => p.role === "counselor_male" || p.role === "counselor_female").length,
-  };
+  const stats = useMemo(() => {
+    return {
+      total: users.length,
+      pending: users.filter((user) => user.status === "pending").length,
+      active: users.filter((user) => user.status === "active").length,
+      suspended: users.filter((user) => user.status === "suspended").length,
+      rejected: users.filter((user) => user.status === "rejected").length,
+    };
+  }, [users]);
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#f6f8fb] p-4 text-slate-950 md:p-8">
+    <main className="min-h-screen bg-[#f4f7fb] px-6 py-8">
       <section className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-black text-teal-700">لوحة مدير النظام</p>
-              <h1 className="mt-2 text-3xl font-black">إدارة المستخدمين وطلبات الانضمام</h1>
+              <p className="text-sm font-black text-teal-700">
+                لوحة مدير النظام
+              </p>
+
+              <h1 className="mt-2 text-3xl font-black text-slate-950">
+                إدارة المستخدمين وطلبات الانضمام
+              </h1>
+
               <p className="mt-2 text-sm font-bold text-slate-500">
-                موافقة، رفض، تعليق، ومتابعة بيانات المستخدمين في منصة بصيرة.
+                مراجعة الحسابات، تفعيلها، تعطيلها، أو رفض طلبات الانضمام.
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white">
+            <div className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white">
               <ShieldCheck size={18} />
-              صلاحيات المدير
+              صلاحيات المدير العام
             </div>
           </div>
-        </header>
+        </div>
 
-        <section className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-5">
           <Stat title="إجمالي المستخدمين" value={stats.total} />
           <Stat title="قيد المراجعة" value={stats.pending} />
           <Stat title="مفعّلون" value={stats.active} />
-          <Stat title="معلمون ومعلمات" value={stats.teachers} />
-          <Stat title="مرشدون ومرشدات" value={stats.counselors} />
-        </section>
+          <Stat title="معطّلون" value={stats.suspended} />
+          <Stat title="مرفوضون" value={stats.rejected} />
+        </div>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4">
             <Search size={18} className="text-slate-400" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="ابحث بالاسم، البريد، المدرسة، المنطقة، الجوال..."
-              className="w-full bg-transparent text-sm font-bold outline-none"
+              className="h-14 flex-1 bg-transparent text-sm font-bold outline-none"
             />
           </div>
 
+          {error && (
+            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-black text-rose-700">
+              {error}
+            </div>
+          )}
+
           {loading ? (
-            <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm font-black text-slate-500">
+            <div className="rounded-2xl border border-slate-200 p-8 text-center text-sm font-black text-slate-400">
               جارٍ تحميل المستخدمين...
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1000px] text-right text-sm">
-                  <thead className="bg-slate-50 text-xs font-black text-slate-500">
-                    <tr>
-                      <th className="p-4">المستخدم</th>
-                      <th className="p-4">الصفة</th>
-                      <th className="p-4">الحالة</th>
-                      <th className="p-4">المدرسة</th>
-                      <th className="p-4">المنطقة</th>
-                      <th className="p-4">الجوال</th>
-                      <th className="p-4">الإجراءات</th>
+            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+              <table className="w-full min-w-[1100px] text-right text-sm">
+                <thead className="bg-slate-50 text-xs font-black text-slate-500">
+                  <tr>
+                    <th className="p-4">المستخدم</th>
+                    <th className="p-4">البريد</th>
+                    <th className="p-4">الصفة</th>
+                    <th className="p-4">الحالة</th>
+                    <th className="p-4">الجوال</th>
+                    <th className="p-4">المنطقة</th>
+                    <th className="p-4">المدرسة</th>
+                    <th className="p-4">الإجراءات</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-100">
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td className="p-4 font-black">
+                        {user.full_name || "-"}
+                      </td>
+
+                      <td className="p-4 font-bold">
+                        {user.email || "-"}
+                      </td>
+
+                      <td className="p-4">
+                        {roleLabel(user.role || "")}
+                      </td>
+
+                      <td className="p-4">
+                        <StatusBadge status={user.status || ""} />
+                      </td>
+
+                      <td className="p-4">
+                        {user.mobile || "-"}
+                      </td>
+
+                      <td className="p-4">
+                        {user.region || "-"}
+                      </td>
+
+                      <td className="p-4">
+                        {user.school_name || "-"}
+                      </td>
+
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-2">
+                          {statusActions.map((action) => (
+                            <button
+                              key={action.value}
+                              type="button"
+                              onClick={() => updateStatus(user.id, action.value)}
+                              className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
+                            >
+                              {action.label}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
+                  ))}
 
-                  <tbody className="divide-y divide-slate-100">
-                    {filtered.map((profile) => (
-                      <tr key={profile.id} className="bg-white">
-                        <td className="p-4">
-                          <div className="font-black">{profile.full_name}</div>
-                          <div className="mt-1 text-xs font-bold text-slate-500">{profile.email}</div>
-                        </td>
-
-                        <td className="p-4 font-bold">{roleLabel(profile.role)}</td>
-
-                        <td className="p-4">
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700">
-                            {statusLabel(profile.status)}
-                          </span>
-                        </td>
-
-                        <td className="p-4 font-bold text-slate-600">{profile.school_name || "-"}</td>
-                        <td className="p-4 font-bold text-slate-600">{profile.region || "-"}</td>
-                        <td className="p-4 font-bold text-slate-600">{profile.mobile || "-"}</td>
-
-                        <td className="p-4">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => updateStatus(profile.id, "active")}
-                              className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 ring-1 ring-emerald-100"
-                            >
-                              <CheckCircle2 size={14} />
-                              تفعيل
-                            </button>
-
-                            <button
-                              onClick={() => updateStatus(profile.id, "rejected")}
-                              className="inline-flex items-center gap-1 rounded-xl bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-100"
-                            >
-                              <XCircle size={14} />
-                              رفض
-                            </button>
-
-                            <button
-                              onClick={() => updateStatus(profile.id, "suspended")}
-                              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700"
-                            >
-                              تعليق
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-
-                    {filtered.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="p-8 text-center font-black text-slate-400">
-                          لا توجد نتائج مطابقة.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                  {filteredUsers.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="p-8 text-center font-black text-slate-400"
+                      >
+                        لا توجد نتائج مطابقة.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
-        </section>
+        </div>
       </section>
     </main>
   );
@@ -228,7 +251,26 @@ function Stat({ title, value }: { title: string; value: number }) {
   return (
     <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-xs font-black text-slate-500">{title}</p>
-      <h2 className="mt-2 text-3xl font-black text-teal-700">{value}</h2>
+      <p className="mt-2 text-3xl font-black text-teal-700">{value}</p>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const label = statusLabel(status);
+
+  const className =
+    status === "active"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : status === "pending"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : status === "suspended"
+      ? "border-slate-200 bg-slate-50 text-slate-600"
+      : "border-rose-200 bg-rose-50 text-rose-700";
+
+  return (
+    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${className}`}>
+      {label}
+    </span>
   );
 }
