@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BarChart3,
+  FileText,
   LayoutDashboard,
   LogOut,
   ShieldCheck,
@@ -20,6 +22,11 @@ const adminItems = [
     title: "إدارة المستخدمين",
     href: "/admin/users",
     icon: UsersRound,
+  },
+  {
+    title: "تقارير التحليلات",
+    href: "/admin/reports",
+    icon: FileText,
   },
 ];
 
