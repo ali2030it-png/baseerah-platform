@@ -55,7 +55,7 @@ export function buildEducationalReport(input: {
   return {
     title: "تقرير تحليل نتائج الطلاب",
     subtitle: "تحليل تربوي لمؤشرات الإتقان والمهارات الحرجة",
-    report_number: `RPT-${Date.now()}`,
+    report_number: buildReportNumber(),
     generated_at: new Date().toLocaleDateString("ar-SA"),
     organization: {
       ministry: "وزارة التعليم",
@@ -71,7 +71,7 @@ export function buildEducationalReport(input: {
     },
     summary: {
       overall_mastery: analysis.overall_mastery,
-      performance_label: performanceLabel(analysis.overall_mastery),
+      performance_label: performanceLabel(analysis.overall_mastery, analysis.total_students),
       total_students: analysis.total_students,
       total_skills: analysis.total_skills,
       weak_skills_count: analysis.weak_skills.length,
@@ -80,7 +80,7 @@ export function buildEducationalReport(input: {
       sample_note: buildSampleNote(analysis.total_students),
       assessment_note: buildAssessmentConsistencyNote(input.purpose || "", input.timing || ""),
     },
-    weak_skills: analysis.weak_skills.slice(0, 6).map((skill) => ({
+    weak_skills: analysis.weak_skills.slice(0, 4).map((skill) => ({
       skill: skill.skill,
       learning_outcome: skill.learning_outcome,
       average_mastery: skill.average_mastery,
@@ -92,7 +92,24 @@ export function buildEducationalReport(input: {
   };
 }
 
-function performanceLabel(value: number) {
+function buildReportNumber() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const h = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+
+  return `${y}${m}${d}-${h}${min}`;
+}
+
+function performanceLabel(value: number, totalStudents: number) {
+  if (totalStudents < 10) {
+    if (value >= 75) return "مؤشر أداء جيد لعينة محدودة";
+    if (value >= 60) return "مؤشر يحتاج متابعة لعينة محدودة";
+    return "مؤشر تعثر لعينة محدودة";
+  }
+
   if (value >= 90) return "إتقان مرتفع";
   if (value >= 75) return "متقن";
   if (value >= 60) return "بحاجة إلى تحسين";
@@ -103,15 +120,15 @@ function buildCleanSummary(analysis: AssessmentAnalysisResult) {
   const weakest = analysis.weak_skills[0];
 
   if (!weakest) {
-    return `بلغ متوسط الإتقان العام ${analysis.overall_mastery}%، ولا تظهر مهارات حرجة في هذا التحليل. ويوصى بالاستمرار في التقويم التكويني والمتابعة الدورية للمحافظة على مستوى الأداء.`;
+    return `بلغ متوسط الإتقان العام ${analysis.overall_mastery}%. ولا تظهر مهارات حرجة في هذا التحليل. ويوصى بالاستمرار في التقويم التكويني والمتابعة الدورية للمحافظة على مستوى الأداء.`;
   }
 
-  return `بلغ متوسط الإتقان العام ${analysis.overall_mastery}%. وتظهر مهارة "${weakest.skill}" كأولوية علاجية؛ إذ بلغ متوسط إتقانها ${weakest.average_mastery}%. وينبغي التعامل مع هذا المؤشر في ضوء حجم العينة ونوع التقويم قبل تعميم الحكم على مستوى الصف.`;
+  return `بلغ متوسط الإتقان العام ${analysis.overall_mastery}%. وتظهر مهارة "${weakest.skill}" كأولوية علاجية؛ إذ بلغ متوسط إتقانها ${weakest.average_mastery}%. ويجب تفسير هذا المؤشر في ضوء حجم العينة ونوع التقويم قبل تعميم الحكم على مستوى الصف أو المدرسة.`;
 }
 
 function buildSampleNote(totalStudents: number) {
   if (totalStudents < 10) {
-    return `تنبيه مهني: حجم العينة (${totalStudents} طلاب) محدود؛ لذلك تُفسر النتائج بوصفها مؤشرات تشخيصية لحالات فردية أو مجموعة صغيرة، ولا تصلح وحدها لتعميم حكم إحصائي على مستوى الصف أو المدرسة.`;
+    return `تنبيه مهني: حجم العينة (${totalStudents} طلاب) محدود؛ لذلك تُفسر النتائج بوصفها مؤشرات لحالات فردية أو مجموعة صغيرة، ولا تصلح وحدها لتعميم حكم إحصائي على مستوى الصف أو المدرسة.`;
   }
 
   return "حجم العينة مناسب مبدئيًا لاستخلاص مؤشرات صفية عامة، مع أهمية دعم النتائج بأدلة أداء إضافية.";
@@ -130,7 +147,7 @@ function buildAssessmentConsistencyNote(purpose: string, timing: string) {
 
 function buildQualitativeDiagnosis(skill: string) {
   if (skill.includes("حل المسائل")) {
-    return "يُحتمل أن يكون موضع الضعف في قراءة نص المسألة، أو تحديد المعطيات، أو اختيار العملية المناسبة، أو ترتيب خطوات الحل. يلزم فحص إجابات الطلاب لتحديد سبب التعثر بدقة.";
+    return "يُحتمل أن يكون موضع الضعف في فهم نص المسألة، أو تحديد المعطيات والمطلوب، أو اختيار العملية المناسبة، أو ترتيب خطوات الحل. يلزم فحص إجابات الطلاب سؤالًا بسؤال قبل اعتماد التدخل العلاجي.";
   }
 
   return "يلزم تحليل إجابات الطلاب نوعيًا لتحديد ما إذا كان الضعف مفاهيميًا أو إجرائيًا أو مرتبطًا بمهارات سابقة.";
@@ -138,7 +155,7 @@ function buildQualitativeDiagnosis(skill: string) {
 
 function buildSpecificIntervention(skill: string) {
   if (skill.includes("حل المسائل")) {
-    return "تدريب الطلاب على استراتيجية: اقرأ المسألة، حدّد المعطيات، حدّد المطلوب، اختر العملية، نفّذ الحل، تحقق من الإجابة؛ مع استخدام مسائل قصيرة متدرجة وصوت تفكير المعلم أمام الطلاب.";
+    return "تنفيذ نشاط علاجي متدرج وفق خطوات: قراءة المسألة، تمييز المعطيات، تحديد المطلوب، اختيار العملية، تنفيذ الحل، والتحقق من الإجابة. يفضل استخدام مسائل قصيرة متدرجة مع نمذجة تفكير المعلم أمام الطلاب.";
   }
 
   return "تصميم نشاط علاجي قصير مرتبط مباشرة بالمهارة، ثم تطبيق تقويم تكويني قصير لقياس التحسن.";
@@ -152,7 +169,7 @@ function buildRecommendations(analysis: AssessmentAnalysisResult, weakestSkill?:
   }
 
   if (analysis.total_students < 10) {
-    recommendations.push("عدم تعميم النتيجة إحصائيًا بسبب محدودية العينة، والتعامل معها كحالات تحتاج متابعة فردية.");
+    recommendations.push("عدم تعميم النتيجة إحصائيًا بسبب محدودية العينة، والتعامل معها كمؤشرات لحالات تحتاج متابعة فردية.");
   }
 
   if (analysis.students_at_risk.length > 0) {
