@@ -7,14 +7,13 @@ export function OfficialReportShell({ report }: { report: EducationalReport }) {
         <OfficialReportHeader report={report} />
 
         <section className="mt-5 text-center">
-          <h1 className="text-3xl font-black">تقرير تحليل نتائج الطلاب</h1>
-          <p className="mt-2 text-sm font-bold text-slate-500">
-            تحليل تربوي مبني على مؤشرات الإتقان والمهارات الحرجة
-          </p>
+          <h1 className="text-3xl font-black">{report.title}</h1>
+          <p className="mt-2 text-sm font-bold text-slate-500">{report.subtitle}</p>
         </section>
 
         <ReportMeta report={report} />
         <ExecutiveSummary report={report} />
+        <ProfessionalNotes report={report} />
         <EducationalAnalysis report={report} />
         <MasteryVisual report={report} />
         <WeakSkillsTable report={report} />
@@ -28,7 +27,7 @@ export function OfficialReportShell({ report }: { report: EducationalReport }) {
 function OfficialReportHeader({ report }: { report: EducationalReport }) {
   return (
     <header className="border-b border-slate-200 pb-4">
-      <div className="grid grid-cols-3 items-start gap-4">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
         <div className="text-right text-sm font-black leading-7">
           <p>المملكة العربية السعودية</p>
           <p>{report.organization.ministry}</p>
@@ -36,12 +35,11 @@ function OfficialReportHeader({ report }: { report: EducationalReport }) {
         </div>
 
         <div className="text-center">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-teal-50 text-base font-black text-teal-700 ring-1 ring-teal-100">
-            بصيرة
-          </div>
-          <p className="mt-2 text-xs font-bold text-slate-500">
-            منصة تحليل تعلم وتشخيص تربوي
-          </p>
+          <img
+            src="/moe-logo.png"
+            alt="شعار وزارة التعليم"
+            className="mx-auto h-16 w-16 object-contain"
+          />
         </div>
 
         <div className="text-left text-xs font-bold leading-6 text-slate-500">
@@ -105,6 +103,24 @@ function ExecutiveSummary({ report }: { report: EducationalReport }) {
   );
 }
 
+function ProfessionalNotes({ report }: { report: EducationalReport }) {
+  return (
+    <section className="mt-6 grid gap-3">
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <p className="text-sm font-bold leading-8 text-slate-700">
+          {report.summary.sample_note}
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm font-bold leading-8 text-slate-700">
+          {report.summary.assessment_note}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function EducationalAnalysis({ report }: { report: EducationalReport }) {
   return (
     <section className="mt-6">
@@ -132,12 +148,6 @@ function MasteryVisual({ report }: { report: EducationalReport }) {
         <div className="mt-3 h-4 overflow-hidden rounded-full bg-slate-100">
           <div className="h-full rounded-full bg-teal-700" style={{ width: `${value}%` }} />
         </div>
-        <div className="mt-2 flex justify-between text-[11px] font-bold text-slate-400">
-          <span>متعثر</span>
-          <span>بحاجة إلى تحسين</span>
-          <span>متقن</span>
-          <span>إتقان مرتفع</span>
-        </div>
       </div>
     </section>
   );
@@ -146,7 +156,7 @@ function MasteryVisual({ report }: { report: EducationalReport }) {
 function WeakSkillsTable({ report }: { report: EducationalReport }) {
   return (
     <section className="mt-6">
-      <SectionTitle title="المهارات الحرجة" />
+      <SectionTitle title="تحليل المهارة الحرجة" />
       <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200">
         <table className="w-full text-right text-sm">
           <thead className="bg-slate-50 text-xs font-black text-slate-500">
@@ -154,7 +164,8 @@ function WeakSkillsTable({ report }: { report: EducationalReport }) {
               <th className="p-3">المهارة</th>
               <th className="p-3">ناتج التعلم</th>
               <th className="p-3">متوسط الإتقان</th>
-              <th className="p-3">عدد المتعثرين</th>
+              <th className="p-3">التحليل النوعي</th>
+              <th className="p-3">التدخل المقترح</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -164,12 +175,13 @@ function WeakSkillsTable({ report }: { report: EducationalReport }) {
                   <td className="p-3 font-black">{skill.skill}</td>
                   <td className="p-3">{skill.learning_outcome || "-"}</td>
                   <td className="p-3 font-black text-teal-700">{skill.average_mastery}%</td>
-                  <td className="p-3">{skill.at_risk_count}</td>
+                  <td className="p-3 leading-7">{skill.qualitative_diagnosis}</td>
+                  <td className="p-3 leading-7">{skill.specific_intervention}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="p-5 text-center font-black text-slate-400">
+                <td colSpan={5} className="p-5 text-center font-black text-slate-400">
                   لا توجد مهارات حرجة في هذا التحليل.
                 </td>
               </tr>

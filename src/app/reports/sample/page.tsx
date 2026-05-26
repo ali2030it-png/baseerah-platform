@@ -60,7 +60,7 @@ export default function SampleReportPage() {
     subject: "الرياضيات",
     grade_level: "الخامس الابتدائي",
     class_name: "أ",
-    purpose: "اختبار تشخيصي",
+    purpose: "اختبار ختامي",
     timing: "نهاية فترة",
     region: "تعليم جازان",
     school: "ابتدائية ومتوسطة حاكمة الدغارير",
@@ -76,3 +76,4 @@ export default function SampleReportPage() {
     </main>
   );
 }
+
