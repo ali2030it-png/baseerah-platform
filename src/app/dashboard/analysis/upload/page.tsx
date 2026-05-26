@@ -242,7 +242,17 @@ export default function UploadPage() {
 
       {loading && <Notice text="جارٍ قراءة الملف..." />}
       {error && <Notice text={error} danger />}
-      {saveMessage && <Notice text={saveMessage} />}
+      {saveMessage && (
+        <section className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-5 text-sm font-black text-emerald-700">
+          <p>{saveMessage}</p>
+          <a
+            href="/dashboard/reports"
+            className="mt-4 inline-flex rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white"
+          >
+            عرض تحليلاتي المحفوظة
+          </a>
+        </section>
+      )}
 
       {rows.length > 0 && (
         <>
@@ -376,3 +386,4 @@ function Notice({ text, danger = false }: { text: string; danger?: boolean }) {
     </section>
   );
 }
+
