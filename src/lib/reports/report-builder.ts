@@ -71,9 +71,9 @@ export function buildEducationalReport(input: {
       total_skills: analysis.total_skills,
       weak_skills_count: analysis.weak_skills.length,
       students_at_risk_count: analysis.students_at_risk.length,
-      educational_summary: analysis.educational_summary,
+      educational_summary: buildCleanSummary(analysis),
     },
-    weak_skills: analysis.weak_skills.slice(0, 8).map((skill) => ({
+    weak_skills: analysis.weak_skills.slice(0, 6).map((skill) => ({
       skill: skill.skill,
       learning_outcome: skill.learning_outcome,
       average_mastery: skill.average_mastery,
@@ -88,6 +88,16 @@ function performanceLabel(value: number) {
   if (value >= 75) return "متقن";
   if (value >= 60) return "بحاجة إلى تحسين";
   return "متعثر";
+}
+
+function buildCleanSummary(analysis: AssessmentAnalysisResult) {
+  const weakest = analysis.weak_skills[0];
+
+  if (!weakest) {
+    return `بلغ متوسط الإتقان العام ${analysis.overall_mastery}%، ولا تظهر مهارات حرجة في هذا التحليل. ويوصى بالاستمرار في التقويم التكويني والمتابعة الدورية للمحافظة على مستوى الأداء.`;
+  }
+
+  return `بلغ متوسط الإتقان العام ${analysis.overall_mastery}%. وتظهر مهارة "${weakest.skill}" كأولوية علاجية؛ إذ بلغ متوسط إتقانها ${weakest.average_mastery}%. ويوصى بتنفيذ تدخلات علاجية مركزة للطلاب المتعثرين وعددهم ${analysis.students_at_risk.length}.`;
 }
 
 function buildRecommendations(analysis: AssessmentAnalysisResult) {
