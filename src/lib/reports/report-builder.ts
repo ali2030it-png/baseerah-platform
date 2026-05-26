@@ -17,6 +17,10 @@ export type EducationalReport = {
     purpose: string;
     timing: string;
   };
+  approval: {
+    preparer_name: string;
+    principal_name: string;
+  };
   summary: {
     overall_mastery: number;
     performance_label: string;
@@ -48,6 +52,8 @@ export function buildEducationalReport(input: {
   timing?: string;
   region?: string;
   school?: string;
+  preparer_name?: string;
+  principal_name?: string;
 }): EducationalReport {
   const { analysis } = input;
   const weakest = analysis.weak_skills[0];
@@ -68,6 +74,10 @@ export function buildEducationalReport(input: {
       class_name: input.class_name || "غير محدد",
       purpose: input.purpose || "تحليل نتائج",
       timing: input.timing || "غير محدد",
+    },
+    approval: {
+      preparer_name: input.preparer_name || "........................",
+      principal_name: input.principal_name || "........................",
     },
     summary: {
       overall_mastery: analysis.overall_mastery,

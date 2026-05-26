@@ -3,12 +3,12 @@ import { EducationalReport } from "@/lib/reports/report-builder";
 export function OfficialReportShell({ report }: { report: EducationalReport }) {
   return (
     <article dir="rtl" className="mx-auto max-w-5xl bg-white p-4 text-slate-950 print:max-w-none print:p-0">
-      <div className="report-page rounded-[1.25rem] border border-slate-200 bg-white p-6 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <div className="report-page rounded-[1.25rem] border border-slate-300 bg-white p-6 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <OfficialReportHeader report={report} />
 
         <section className="mt-5 text-center">
           <h1 className="text-3xl font-black">{report.title}</h1>
-          <p className="mt-2 text-sm font-bold text-slate-500">{report.subtitle}</p>
+          <p className="mt-2 text-sm font-bold text-slate-600">{report.subtitle}</p>
         </section>
 
         <ReportMeta report={report} />
@@ -18,7 +18,7 @@ export function OfficialReportShell({ report }: { report: EducationalReport }) {
         <MasteryVisual report={report} />
         <WeakSkillsCards report={report} />
         <Recommendations report={report} />
-        <SignatureArea />
+        <SignatureArea report={report} />
       </div>
     </article>
   );
@@ -26,12 +26,13 @@ export function OfficialReportShell({ report }: { report: EducationalReport }) {
 
 function OfficialReportHeader({ report }: { report: EducationalReport }) {
   return (
-    <header className="border-b border-slate-200 pb-4">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-4">
-        <div className="text-right text-sm font-black leading-7">
+    <header className="border-b border-slate-300 pb-4">
+      <div className="grid grid-cols-[1fr_90px_1fr] items-start gap-4">
+        <div className="text-center text-sm font-black leading-7">
           <p>المملكة العربية السعودية</p>
           <p>{report.organization.ministry}</p>
           <p>{report.organization.region}</p>
+          <p>{report.organization.school}</p>
         </div>
 
         <div className="flex justify-center">
@@ -42,7 +43,7 @@ function OfficialReportHeader({ report }: { report: EducationalReport }) {
           />
         </div>
 
-        <div className="text-left text-xs font-bold leading-6 text-slate-500">
+        <div className="text-right text-xs font-black leading-6 text-slate-700">
           <p>
             رقم التقرير:{" "}
             <span dir="ltr" className="inline-block font-black">
@@ -50,7 +51,6 @@ function OfficialReportHeader({ report }: { report: EducationalReport }) {
             </span>
           </p>
           <p>تاريخ الإصدار: {report.generated_at}</p>
-          <p>المدرسة: {report.organization.school}</p>
         </div>
       </div>
     </header>
@@ -69,9 +69,9 @@ function ReportMeta({ report }: { report: EducationalReport }) {
   return (
     <section className="mt-5 grid gap-2 md:grid-cols-5 print:grid-cols-5">
       {items.map(([label, value]) => (
-        <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-center">
-          <p className="text-[11px] font-black text-slate-500">{label}</p>
-          <p className="mt-1 text-sm font-black">{value}</p>
+        <div key={label} className="rounded-xl border border-slate-300 bg-slate-50 p-2.5 text-center">
+          <p className="text-[11px] font-black text-slate-600">{label}</p>
+          <p className="mt-1 text-sm font-black text-slate-950">{value}</p>
         </div>
       ))}
     </section>
@@ -89,13 +89,13 @@ function ExecutiveSummary({ report }: { report: EducationalReport }) {
   ];
 
   return (
-    <section className="mt-6 avoid-break">
+    <section className="mt-5 avoid-break">
       <SectionTitle title="الملخص التنفيذي" />
       <div className="mt-3 grid gap-2 md:grid-cols-3 print:grid-cols-3">
         {items.map(([label, value]) => (
-          <div key={label} className="rounded-2xl border border-slate-200 p-3">
-            <p className="text-[11px] font-black text-slate-500">{label}</p>
-            <p className="mt-1 text-2xl font-black text-teal-700">{value}</p>
+          <div key={label} className="rounded-xl border border-slate-300 bg-white p-2.5">
+            <p className="text-[11px] font-black text-slate-600">{label}</p>
+            <p className="mt-1 text-xl font-black text-teal-800">{value}</p>
           </div>
         ))}
       </div>
@@ -106,14 +106,14 @@ function ExecutiveSummary({ report }: { report: EducationalReport }) {
 function ProfessionalNotes({ report }: { report: EducationalReport }) {
   return (
     <section className="mt-5 grid gap-3 avoid-break">
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-        <p className="text-sm font-bold leading-8 text-slate-700">
+      <div className="rounded-xl border border-amber-300 bg-amber-50 p-3.5">
+        <p className="text-sm font-bold leading-7 text-slate-800">
           {report.summary.sample_note}
         </p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm font-bold leading-8 text-slate-700">
+      <div className="rounded-xl border border-slate-300 bg-slate-50 p-3.5">
+        <p className="text-sm font-bold leading-7 text-slate-800">
           {report.summary.assessment_note}
         </p>
       </div>
@@ -125,8 +125,8 @@ function EducationalAnalysis({ report }: { report: EducationalReport }) {
   return (
     <section className="mt-5 avoid-break">
       <SectionTitle title="التحليل التربوي" />
-      <div className="mt-3 rounded-2xl border border-teal-100 bg-teal-50 p-4">
-        <p className="text-sm font-bold leading-8 text-slate-700">
+      <div className="mt-3 rounded-xl border border-teal-200 bg-teal-50 p-3.5">
+        <p className="text-sm font-bold leading-7 text-slate-800">
           {report.summary.educational_summary}
         </p>
       </div>
@@ -140,12 +140,12 @@ function MasteryVisual({ report }: { report: EducationalReport }) {
   return (
     <section className="mt-5 avoid-break">
       <SectionTitle title="المؤشر البصري للإتقان" />
-      <div className="mt-3 rounded-2xl border border-slate-200 p-4">
+      <div className="mt-3 rounded-xl border border-slate-300 p-3.5">
         <div className="flex items-center justify-between text-sm font-black">
           <span>مستوى الإتقان العام</span>
-          <span className="text-teal-700">{value}%</span>
+          <span className="text-teal-800">{value}%</span>
         </div>
-        <div className="mt-3 h-4 overflow-hidden rounded-full bg-slate-100">
+        <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-300">
           <div className="h-full rounded-full bg-teal-700" style={{ width: `${value}%` }} />
         </div>
       </div>
@@ -161,22 +161,22 @@ function WeakSkillsCards({ report }: { report: EducationalReport }) {
       <div className="mt-3 space-y-3">
         {report.weak_skills.length > 0 ? (
           report.weak_skills.map((skill) => (
-            <div key={`${skill.skill}-${skill.learning_outcome}`} className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="grid gap-3 md:grid-cols-4 print:grid-cols-4">
+            <div key={`${skill.skill}-${skill.learning_outcome}`} className="rounded-xl border border-slate-300 bg-white p-3.5">
+              <div className="grid gap-2 md:grid-cols-4 print:grid-cols-4">
                 <InfoItem title="المهارة" value={skill.skill} strong />
                 <InfoItem title="ناتج التعلم" value={skill.learning_outcome || "-"} />
                 <InfoItem title="متوسط الإتقان" value={`${skill.average_mastery}%`} strong />
                 <InfoItem title="عدد المتعثرين" value={skill.at_risk_count} />
               </div>
 
-              <div className="mt-4 grid gap-3 md:grid-cols-2 print:grid-cols-2">
+              <div className="mt-3 grid gap-3 md:grid-cols-2 print:grid-cols-2">
                 <TextBlock title="التحليل النوعي" text={skill.qualitative_diagnosis} />
                 <TextBlock title="التدخل المقترح" text={skill.specific_intervention} />
               </div>
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-slate-200 p-5 text-center font-black text-slate-400">
+          <div className="rounded-xl border border-slate-300 p-5 text-center font-black text-slate-500">
             لا توجد مهارات حرجة في هذا التحليل.
           </div>
         )}
@@ -191,7 +191,7 @@ function Recommendations({ report }: { report: EducationalReport }) {
       <SectionTitle title="التوصيات العلاجية" />
       <div className="mt-3 space-y-2">
         {report.recommendations.map((item, index) => (
-          <div key={index} className="rounded-2xl border border-slate-200 bg-white p-3 text-sm font-bold leading-7">
+          <div key={index} className="rounded-xl border border-slate-300 bg-white p-3 text-sm font-bold leading-7 text-slate-900">
             {index + 1}. {item}
           </div>
         ))}
@@ -200,16 +200,21 @@ function Recommendations({ report }: { report: EducationalReport }) {
   );
 }
 
-function SignatureArea() {
+function SignatureArea({ report }: { report: EducationalReport }) {
   return (
-    <footer className="mt-7 grid grid-cols-2 gap-6 border-t border-slate-200 pt-5 text-sm font-bold avoid-break">
-      <div>
-        <p>معد التقرير:</p>
-        <p className="mt-6">التوقيع: ........................</p>
-      </div>
-      <div>
-        <p>اعتماد:</p>
-        <p className="mt-6">التوقيع: ........................</p>
+    <footer className="mt-6 border-t border-slate-300 pt-5 text-sm font-bold avoid-break">
+      <div className="grid grid-cols-2 gap-8">
+        <div className="rounded-xl border border-slate-300 p-4">
+          <p className="font-black">معد التقرير</p>
+          <p className="mt-3">الاسم: {report.approval.preparer_name}</p>
+          <p className="mt-5">التوقيع: ........................</p>
+        </div>
+
+        <div className="rounded-xl border border-slate-300 p-4">
+          <p className="font-black">اعتماد مدير المدرسة</p>
+          <p className="mt-3">الاسم: {report.approval.principal_name}</p>
+          <p className="mt-5">التوقيع: ........................</p>
+        </div>
       </div>
     </footer>
   );
@@ -225,9 +230,9 @@ function InfoItem({
   strong?: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-3">
-      <p className="text-[11px] font-black text-slate-500">{title}</p>
-      <p className={["mt-1 text-sm", strong ? "font-black text-teal-700" : "font-bold text-slate-700"].join(" ")}>
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+      <p className="text-[11px] font-black text-slate-600">{title}</p>
+      <p className={["mt-1 text-sm", strong ? "font-black text-teal-800" : "font-bold text-slate-800"].join(" ")}>
         {value}
       </p>
     </div>
@@ -236,9 +241,9 @@ function InfoItem({
 
 function TextBlock({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-      <p className="text-xs font-black text-slate-500">{title}</p>
-      <p className="mt-2 text-sm font-bold leading-8 text-slate-700">{text}</p>
+    <div className="rounded-xl border border-slate-300 bg-slate-50 p-3">
+      <p className="text-xs font-black text-slate-600">{title}</p>
+      <p className="mt-2 text-sm font-bold leading-7 text-slate-800">{text}</p>
     </div>
   );
 }
@@ -247,7 +252,7 @@ function SectionTitle({ title }: { title: string }) {
   return (
     <div className="flex items-center gap-3">
       <span className="h-7 w-1.5 rounded-full bg-teal-700" />
-      <h3 className="text-xl font-black">{title}</h3>
+      <h3 className="text-xl font-black text-slate-950">{title}</h3>
     </div>
   );
 }

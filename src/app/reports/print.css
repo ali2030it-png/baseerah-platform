@@ -28,6 +28,20 @@
     page-break-inside: avoid;
   }
 
+  .report-page,
+  .report-page * {
+    color: #0f172a;
+  }
+
+  .report-page [class*="border"] {
+    border-color: #cbd5e1 !important;
+  }
+
+  .report-page [class*="text-slate-500"],
+  .report-page [class*="text-slate-600"] {
+    color: #334155 !important;
+  }
+
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

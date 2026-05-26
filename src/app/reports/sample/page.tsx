@@ -13,7 +13,7 @@ const sampleRows: ParsedAssessmentRow[] = [
     learning_outcome: "يحل مسائل رياضية متعددة الخطوات",
     score: 4,
     max_score: 10,
-    assessment_purpose: "diagnostic",
+    assessment_purpose: "summative",
     assessment_timing: "period_end",
     national_exam_type: "none",
     grade_level: "الخامس الابتدائي",
@@ -28,7 +28,7 @@ const sampleRows: ParsedAssessmentRow[] = [
     learning_outcome: "يحل مسائل رياضية متعددة الخطوات",
     score: 5,
     max_score: 10,
-    assessment_purpose: "diagnostic",
+    assessment_purpose: "summative",
     assessment_timing: "period_end",
     national_exam_type: "none",
     grade_level: "الخامس الابتدائي",
@@ -43,7 +43,7 @@ const sampleRows: ParsedAssessmentRow[] = [
     learning_outcome: "يفسر البيانات الممثلة في الجداول",
     score: 9,
     max_score: 10,
-    assessment_purpose: "diagnostic",
+    assessment_purpose: "summative",
     assessment_timing: "period_end",
     national_exam_type: "none",
     grade_level: "الخامس الابتدائي",
@@ -64,6 +64,8 @@ export default function SampleReportPage() {
     timing: "نهاية فترة",
     region: "تعليم جازان",
     school: "ابتدائية ومتوسطة حاكمة الدغارير",
+    preparer_name: "........................",
+    principal_name: "علي بن أحمد مباركي",
   });
 
   return (
@@ -76,4 +78,3 @@ export default function SampleReportPage() {
     </main>
   );
 }
-
