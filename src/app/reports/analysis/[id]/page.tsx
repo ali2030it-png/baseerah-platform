@@ -179,7 +179,7 @@ export default function PrintableAnalysisReportPage() {
 
       <article className="mx-auto max-w-5xl rounded-2xl bg-white p-6 shadow-sm print:max-w-none print:rounded-none print:p-0 print:shadow-none">
         <header className="border-b border-slate-300 pb-4">
-          <div className="grid grid-cols-[1fr_150px_1fr] items-start gap-10">
+          <div className="grid grid-cols-[1fr_230px_1fr] items-start gap-12">
             <div className="text-center text-[13px] font-bold leading-7 text-slate-900">
               <p>المملكة العربية السعودية</p>
               <p>وزارة التعليم</p>
@@ -187,7 +187,7 @@ export default function PrintableAnalysisReportPage() {
               <p>{settings?.school_name || "اسم المدرسة"}</p>
             </div>
 
-            <div className="flex justify-center px-5 pt-1">
+            <div className="flex justify-center px-12 pt-1">
               <img
                 src="/moe-logo.png"
                 alt="شعار وزارة التعليم"
@@ -195,7 +195,7 @@ export default function PrintableAnalysisReportPage() {
               />
             </div>
 
-            <div className="text-right text-[13px] font-bold leading-7 text-slate-900">
+            <div className="pr-14 text-right text-[13px] font-bold leading-7 text-slate-900">
               <p>رقم التقرير: {shortReportNumber(record.id)}</p>
               <p>تاريخ التقرير: {formatDate(record.created_at)}</p>
               <p>نوع التحليل: {getAnalysisTypeLabel(record.analysis_type)}</p>
@@ -246,6 +246,53 @@ export default function PrintableAnalysisReportPage() {
             </tbody>
           </table>
         </section>
+
+        <Section title="الرسوم البيانية">
+          <div className="grid gap-4 md:grid-cols-2 print:grid-cols-2">
+            <ChartCard title="توزيع مستويات الطلاب">
+              <ChartBar
+                label="إتقان مرتفع"
+                value={studentStats.excellent}
+                max={studentAnalysis.length || 1}
+              />
+              <ChartBar
+                label="متقنون"
+                value={studentStats.mastered}
+                max={studentAnalysis.length || 1}
+              />
+              <ChartBar
+                label="بحاجة إلى تحسين"
+                value={studentStats.needsImprovement}
+                max={studentAnalysis.length || 1}
+              />
+              <ChartBar
+                label="متعثرون"
+                value={studentStats.atRisk}
+                max={studentAnalysis.length || 1}
+                danger
+              />
+            </ChartCard>
+
+            <ChartCard title="إتقان المهارات">
+              {skillAnalysis.length > 0 ? (
+                skillAnalysis.slice(0, 6).map((skill: any, index: number) => (
+                  <ChartBar
+                    key={`${skill.skill}-${index}`}
+                    label={skill.skill || "مهارة"}
+                    value={Number(skill.average_mastery) || 0}
+                    max={100}
+                    suffix="%"
+                    danger={(Number(skill.average_mastery) || 0) < 75}
+                  />
+                ))
+              ) : (
+                <p className="text-sm font-bold text-slate-400">
+                  لا توجد بيانات مهارات للرسم.
+                </p>
+              )}
+            </ChartCard>
+          </div>
+        </Section>
 
         <Section title="الملخص التنفيذي">
           <p className="text-sm font-bold leading-7 text-slate-700">
@@ -431,6 +478,57 @@ function CompactTable({
   );
 }
 
+function ChartCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-300 p-4">
+      <h3 className="mb-3 text-base font-extrabold text-slate-950">
+        {title}
+      </h3>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
+function ChartBar({
+  label,
+  value,
+  max,
+  suffix = "",
+  danger = false,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  suffix?: string;
+  danger?: boolean;
+}) {
+  const percent = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between gap-3 text-xs font-bold text-slate-600">
+        <span className="truncate">{label}</span>
+        <span>{value}{suffix}</span>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={[
+            "h-full rounded-full",
+            danger ? "bg-rose-600" : "bg-teal-700",
+          ].join(" ")}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function levelText(level?: string) {
   return levelLabels[level || ""] || "غير محدد";
 }
@@ -477,5 +575,7 @@ function formatDate(value?: string | null) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(new Date(value));
 }
+
+
 
 
