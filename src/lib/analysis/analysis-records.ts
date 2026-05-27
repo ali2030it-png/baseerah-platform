@@ -1,203 +1,230 @@
 import { ParsedAssessmentRow } from "@/lib/analysis/excel-parser";
-import { AssessmentAnalysisResult } from "@/lib/analysis/skill-analytics";
+import type { AssessmentMetadata } from "@/lib/analysis/assessment-metadata";
 
-export type SavedAnalysisPayload = {
+type BuildAnalysisRecordPayloadInput = {
   userId: string;
   rows: ParsedAssessmentRow[];
-  analysis: AssessmentAnalysisResult;
+  analysis: any;
+  metadata?: AssessmentMetadata;
 };
-
-const allowedAnalysisTypes = new Set([
-  "diagnostic",
-  "formative",
-  "summative",
-  "period_end",
-  "term_end",
-  "year_end",
-  "learning_outcome",
-  "nafs",
-  "qudrat",
-  "tahsili",
-  "impact",
-]);
 
 export function buildAnalysisRecordPayload({
   userId,
   rows,
   analysis,
-}: SavedAnalysisPayload) {
-  const firstRow = rows.find((row) => row.student_name && row.subject) || rows[0];
-
-  const analysisType = inferAnalysisType(rows);
+  metadata,
+}: BuildAnalysisRecordPayloadInput) {
   const subject =
-    mostCommon(rows.map((row) => row.subject)) ||
-    firstRow?.subject ||
+    metadata?.subject?.trim() ||
+    mostCommonDisplay(rows.map((row) => row.subject)) ||
     "غير محدد";
 
-  const purpose =
-    mostCommon(rows.map((row) => String(row.assessment_purpose || ""))) || "";
+  const assessmentPurpose =
+    mostCommonDisplay(rows.map((row) => String(row.assessment_purpose || ""))) ||
+    "summative";
 
-  const timing =
-    mostCommon(rows.map((row) => String(row.assessment_timing || ""))) || "";
+  const assessmentTiming =
+    metadata?.assessment_timing?.trim() ||
+    mostCommonDisplay(rows.map((row) => String(row.assessment_timing || ""))) ||
+    "";
 
   const gradeLevel =
-    mostCommon(rows.map((row) => String(row.grade_level || ""))) || "";
+    metadata?.grade_level?.trim() ||
+    mostCommonDisplay(rows.map((row) => String(row.grade_level || ""))) ||
+    "";
 
   const className =
-    mostCommon(rows.map((row) => String(row.class_name || ""))) || "";
+    metadata?.class_name?.trim() ||
+    mostCommonDisplay(rows.map((row) => String(row.class_name || ""))) ||
+    "";
+
+  const semester =
+    metadata?.semester?.trim() ||
+    mostCommonDisplay(rows.map((row: any) => String(row.semester || ""))) ||
+    "";
 
   const assessmentTitle =
-    mostCommon(rows.map((row) => String(row.skill || ""))) || "";
+    mostCommonDisplay(rows.map((row: any) => String(row.assessment_title || ""))) ||
+    "";
 
-  const maxScoreValue =
-    Number(mostCommon(rows.map((row) => String(row.max_score || "")))) || null;
+  const maxScoreValue = Number(metadata?.max_score) || Number(
+    mostCommonDisplay(rows.map((row) => String(row.max_score || "")))
+  ) || null;
 
-  const fingerprint = buildRecordFingerprint(
-    rows,
-    analysisType,
+  const analysisType = purposeToAnalysisType(assessmentPurpose);
+
+  const recordFingerprint = buildStableRecordKey({
+    userId,
     subject,
-    purpose,
-    timing
-  );
+    gradeLevel,
+    className,
+    semester,
+    assessmentTiming,
+    assessmentPurpose,
+  });
+
+  const contentHash = buildContentHash(rows);
 
   return {
     user_id: userId,
     analysis_type: analysisType,
     subject,
-    assessment_purpose: purpose,
-    assessment_timing: timing,
+    assessment_purpose: assessmentPurpose,
+    assessment_timing: assessmentTiming,
     grade_level: gradeLevel,
     class_name: className,
+    semester,
     assessment_title: assessmentTitle,
     max_score: maxScoreValue,
-    students_count: analysis.total_students,
-    skills_count: analysis.total_skills,
-    overall_mastery: analysis.overall_mastery,
-    report_title: buildReportTitle(subject, analysisType),
-    record_fingerprint: fingerprint,
-    analysis_snapshot: sanitizeAnalysisSnapshot(analysis),
+    students_count: analysis.total_students ?? 0,
+    skills_count: analysis.total_skills ?? 0,
+    overall_mastery: analysis.overall_mastery ?? 0,
+    improvement_rate: analysis.improvement_rate ?? null,
+    report_title: `تحليل ${getAnalysisTypeLabel(analysisType)} - ${subject}`,
+    analysis_snapshot: analysis,
+    record_fingerprint: recordFingerprint,
+    content_hash: contentHash,
     updated_at: new Date().toISOString(),
   };
 }
 
-function sanitizeAnalysisSnapshot(analysis: AssessmentAnalysisResult) {
-  return {
-    total_rows: analysis.total_rows,
-    total_students: analysis.total_students,
-    total_skills: analysis.total_skills,
-    overall_mastery: analysis.overall_mastery,
-    level: analysis.level,
-    skill_analysis: analysis.skill_analysis,
-    student_analysis: analysis.student_analysis,
-    weak_skills: analysis.weak_skills,
-    top_skills: analysis.top_skills,
-    students_at_risk: analysis.students_at_risk,
-    educational_summary: analysis.educational_summary,
-  };
+function buildStableRecordKey({
+  userId,
+  subject,
+  gradeLevel,
+  className,
+  semester,
+  assessmentTiming,
+  assessmentPurpose,
+}: {
+  userId: string;
+  subject: string;
+  gradeLevel: string;
+  className: string;
+  semester: string;
+  assessmentTiming: string;
+  assessmentPurpose: string;
+}) {
+  return hashText(
+    [
+      userId,
+      subject,
+      gradeLevel,
+      className,
+      semester,
+      assessmentTiming,
+      assessmentPurpose,
+    ]
+      .map(normalizeKeyPart)
+      .join("|")
+  );
 }
 
-function inferAnalysisType(rows: ParsedAssessmentRow[]) {
-  const nationalType = mostCommon(
-    rows
-      .map((row) => String(row.national_exam_type || "").trim())
-      .filter((value) => value && value !== "none")
-  );
+function buildContentHash(rows: ParsedAssessmentRow[]) {
+  const canonicalRows = rows
+    .map((row) => ({
+      student: normalizeKeyPart(row.student_id || row.student_name),
+      name: normalizeKeyPart(row.student_name),
+      skill: normalizeKeyPart(row.skill),
+      score: normalizeNumber(row.score),
+      max: normalizeNumber(row.max_score),
+    }))
+    .sort((a, b) =>
+      `${a.student}|${a.name}|${a.skill}`.localeCompare(
+        `${b.student}|${b.name}|${b.skill}`
+      )
+    )
+    .map((row) => `${row.student}|${row.name}|${row.skill}|${row.score}|${row.max}`)
+    .join("\n");
 
-  if (nationalType && allowedAnalysisTypes.has(nationalType)) {
-    return nationalType;
+  return hashText(canonicalRows);
+}
+
+function normalizeKeyPart(value?: string | number | null) {
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/[ـ]/g, "")
+    .toLowerCase();
+}
+
+function normalizeNumber(value?: string | number | null) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "0";
+  return String(Math.round(number * 1000) / 1000);
+}
+
+function hashText(input: string) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < input.length; index++) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
 
-  const purpose = mostCommon(
-    rows.map((row) => String(row.assessment_purpose || "").trim())
-  );
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
 
-  if (purpose === "impact_pre" || purpose === "impact_post") {
-    return "impact";
-  }
+function mostCommonDisplay(values: Array<string | null | undefined>) {
+  const counts = new Map<string, { display: string; count: number }>();
 
-  if (purpose && allowedAnalysisTypes.has(purpose)) {
+  values
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean)
+    .forEach((display) => {
+      const key = normalizeKeyPart(display);
+      const current = counts.get(key);
+
+      if (!current) {
+        counts.set(key, { display, count: 1 });
+      } else {
+        current.count += 1;
+      }
+    });
+
+  return [...counts.values()].sort((a, b) => b.count - a.count)[0]?.display || "";
+}
+
+function purposeToAnalysisType(purpose?: string | null) {
+  if (!purpose) return "summative";
+
+  if (
+    [
+      "diagnostic",
+      "formative",
+      "summative",
+      "learning_outcome",
+      "training",
+      "impact_pre",
+      "impact_post",
+      "nafs",
+      "qudrat",
+      "tahsili",
+    ].includes(purpose)
+  ) {
     return purpose;
   }
 
-  const timing = mostCommon(
-    rows.map((row) => String(row.assessment_timing || "").trim())
-  );
-
-  if (timing && allowedAnalysisTypes.has(timing)) {
-    return timing;
-  }
-
-  return "formative";
+  return "summative";
 }
 
-function buildRecordFingerprint(
-  rows: ParsedAssessmentRow[],
-  analysisType: string,
-  subject: string,
-  purpose: string,
-  timing: string
-) {
-  const normalizedRows = rows
-    .map((row) =>
-      [
-        row.student_id || row.student_name,
-        row.subject,
-        row.skill,
-        row.learning_outcome,
-        row.score,
-        row.max_score,
-        row.assessment_purpose,
-        row.assessment_timing,
-        row.grade_level,
-        row.class_name,
-      ].join("|")
-    )
-    .sort()
-    .join("||");
-
-  return simpleHash(
-    [analysisType, subject, purpose, timing, normalizedRows].join("###")
-  );
-}
-
-function simpleHash(input: string) {
-  let hash = 5381;
-
-  for (let index = 0; index < input.length; index++) {
-    hash = (hash * 33) ^ input.charCodeAt(index);
-  }
-
-  return Math.abs(hash >>> 0).toString(16);
-}
-
-function mostCommon(values: string[]) {
-  const counter = new Map<string, number>();
-
-  values
-    .map((value) => value.trim())
-    .filter(Boolean)
-    .forEach((value) => {
-      counter.set(value, (counter.get(value) || 0) + 1);
-    });
-
-  return Array.from(counter.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
-}
-
-function buildReportTitle(subject: string, analysisType: string) {
+function getAnalysisTypeLabel(type?: string | null) {
   const labels: Record<string, string> = {
-    diagnostic: "تحليل تشخيصي",
-    formative: "تحليل تكويني",
-    summative: "تحليل ختامي",
-    period_end: "تحليل نهاية فترة",
-    term_end: "تحليل نهاية فصل",
-    year_end: "تحليل نهاية عام",
-    learning_outcome: "تحليل ناتج تعلم",
-    nafs: "تحليل نافس",
-    qudrat: "تحليل القدرات",
-    tahsili: "تحليل التحصيلي",
-    impact: "قياس أثر",
+    diagnostic: "تشخيصي",
+    formative: "تكويني",
+    summative: "ختامي",
+    learning_outcome: "ناتج تعلم",
+    training: "تدريب",
+    impact_pre: "قياس قبلي",
+    impact_post: "قياس بعدي",
+    nafs: "نافس",
+    qudrat: "قدرات",
+    tahsili: "تحصيلي",
   };
 
-  return `${labels[analysisType] || "تحليل نتائج"} - ${subject || "غير محدد"}`;
+  return labels[type || ""] || "ختامي";
 }
 

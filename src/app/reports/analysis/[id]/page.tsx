@@ -12,6 +12,10 @@ type AnalysisRecord = {
   subject: string | null;
   analysis_type: string | null;
   assessment_timing: string | null;
+  grade_level: string | null;
+  class_name: string | null;
+  semester: string | null;
+  assessment_title: string | null;
   students_count: number | null;
   skills_count: number | null;
   overall_mastery: number | null;
@@ -78,7 +82,7 @@ export default function PrintableAnalysisReportPage() {
 
     const { data: reportData, error: reportError } = await supabase
       .from("analysis_records")
-      .select("id,user_id,report_title,subject,analysis_type,assessment_timing,students_count,skills_count,overall_mastery,created_at,analysis_snapshot")
+      .select("id,user_id,report_title,subject,analysis_type,assessment_timing,grade_level,class_name,semester,assessment_title,students_count,skills_count,overall_mastery,created_at,analysis_snapshot")
       .eq("id", reportId)
       .single();
 
@@ -208,6 +212,27 @@ export default function PrintableAnalysisReportPage() {
             {record.report_title || "تقرير تحليل نتائج الطلاب"}
           </h1>
           
+        </section>
+
+        <section className="mt-4 overflow-hidden rounded-xl border border-slate-300">
+          <table className="w-full text-center text-xs">
+            <tbody>
+              <tr className="bg-slate-50 font-extrabold text-slate-500">
+                <td className="border-l border-slate-300 p-2">المادة</td>
+                <td className="border-l border-slate-300 p-2">الصف / المسار</td>
+                <td className="border-l border-slate-300 p-2">الشعبة</td>
+                <td className="border-l border-slate-300 p-2">الفصل الدراسي</td>
+                <td className="p-2">نوع الاختبار</td>
+              </tr>
+              <tr className="font-black text-slate-900">
+                <td className="border-l border-slate-300 p-2">{record.subject || "-"}</td>
+                <td className="border-l border-slate-300 p-2">{record.grade_level || "-"}</td>
+                <td className="border-l border-slate-300 p-2">{record.class_name || "-"}</td>
+                <td className="border-l border-slate-300 p-2">{record.semester || "-"}</td>
+                <td className="p-2">{record.assessment_timing || "-"}</td>
+              </tr>
+            </tbody>
+          </table>
         </section>
 
         {!snapshot && (
@@ -595,6 +620,8 @@ function toArabicDigits(value: string) {
 
   return value.replace(/[0-9]/g, (digit) => map[digit] || digit);
 }
+
+
 
 
 

@@ -24,7 +24,11 @@ import {
 import { buildAnalysisRecordPayload } from "@/lib/analysis/analysis-records";
 import {
   applyAssessmentMetadataToRows,
+  assessmentTimingLabels,
   defaultAssessmentMetadata,
+  gradeLevelLabels,
+  semesterLabels,
+  subjectLabels,
   validateAssessmentMetadata,
 } from "@/lib/analysis/assessment-metadata";
 import { supabase } from "@/lib/supabase/client";
@@ -50,31 +54,7 @@ const timingLabels: Record<string, string> = {
   national: "اختبار وطني",
 };
 
-const subjectLabels: Record<string, string> = {
-  "": "اختر المادة",
-  "الرياضيات": "الرياضيات",
-  "لغتي": "لغتي",
-  "العلوم": "العلوم",
-  "اللغة الإنجليزية": "اللغة الإنجليزية",
-  "الدراسات الإسلامية": "الدراسات الإسلامية",
-  "الدراسات الاجتماعية": "الدراسات الاجتماعية",
-  "المهارات الرقمية": "المهارات الرقمية",
-  "التربية الفنية": "التربية الفنية",
-  "التربية البدنية": "التربية البدنية",
-};
 
-const assessmentTimingLabels: Record<string, string> = {
-  "": "اختر نوع الاختبار",
-  "اختبار قصير": "اختبار قصير",
-  "اختبار تشخيصي": "اختبار تشخيصي",
-  "اختبار تكويني": "اختبار تكويني",
-  "نهاية الفترة الأولى": "نهاية الفترة الأولى",
-  "نهاية الفترة الثانية": "نهاية الفترة الثانية",
-  "نهاية الفصل الدراسي الأول": "نهاية الفصل الدراسي الأول",
-  "نهاية الفصل الدراسي الثاني": "نهاية الفصل الدراسي الثاني",
-  "نهاية الفصل الدراسي الثالث": "نهاية الفصل الدراسي الثالث",
-  "نهاية العام": "نهاية العام",
-};
 
 export default function UploadPage() {
   const [mode, setMode] = useState<InputMode>("excel");
@@ -99,6 +79,8 @@ export default function UploadPage() {
     national_exam_type: "none",
     grade_level: "",
     class_name: "",
+    semester: "",
+    assessment_title: "",
     assessment_date: "",
   });
 
@@ -211,6 +193,7 @@ export default function UploadPage() {
       userId: user.id,
       rows,
       analysis,
+      metadata,
     });
 
     const { error: insertError } = await supabase
@@ -276,16 +259,24 @@ export default function UploadPage() {
             onChange={(value) => setMetadata({ ...metadata, subject: value })}
           />
 
-          <Input
-            label="الصف"
+          <Select
+            label="الصف / المسار"
             value={metadata.grade_level}
+            options={gradeLevelLabels}
             onChange={(value) => setMetadata({ ...metadata, grade_level: value })}
           />
 
           <Input
-            label="الفصل"
+            label="الشعبة"
             value={metadata.class_name}
             onChange={(value) => setMetadata({ ...metadata, class_name: value })}
+          />
+
+          <Select
+            label="الفصل الدراسي"
+            value={metadata.semester}
+            options={semesterLabels}
+            onChange={(value) => setMetadata({ ...metadata, semester: value })}
           />
 
           <Select
@@ -294,14 +285,6 @@ export default function UploadPage() {
             options={assessmentTimingLabels}
             onChange={(value) =>
               setMetadata({ ...metadata, assessment_timing: value })
-            }
-          />
-
-          <Input
-            label="مسمى الاختبار أو المهارة"
-            value={metadata.assessment_title}
-            onChange={(value) =>
-              setMetadata({ ...metadata, assessment_title: value })
             }
           />
 
@@ -559,3 +542,7 @@ function Stat({ title, value }: { title: string; value: string | number }) {
     </div>
   );
 }
+
+
+
+
