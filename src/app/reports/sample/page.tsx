@@ -18,6 +18,8 @@ const sampleRows: ParsedAssessmentRow[] = [
     national_exam_type: "none",
     grade_level: "الخامس الابتدائي",
     class_name: "أ",
+    semester: "الفصل الدراسي الأول",
+    assessment_title: "درجة الاختبار",
     assessment_date: "2026-05-26",
   },
   {
@@ -33,6 +35,8 @@ const sampleRows: ParsedAssessmentRow[] = [
     national_exam_type: "none",
     grade_level: "الخامس الابتدائي",
     class_name: "أ",
+    semester: "الفصل الدراسي الأول",
+    assessment_title: "درجة الاختبار",
     assessment_date: "2026-05-26",
   },
   {
@@ -48,6 +52,8 @@ const sampleRows: ParsedAssessmentRow[] = [
     national_exam_type: "none",
     grade_level: "الخامس الابتدائي",
     class_name: "أ",
+    semester: "الفصل الدراسي الأول",
+    assessment_title: "درجة الاختبار",
     assessment_date: "2026-05-26",
   },
 ];
@@ -78,3 +84,4 @@ export default function SampleReportPage() {
     </main>
   );
 }
+
