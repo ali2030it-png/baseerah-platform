@@ -346,7 +346,7 @@ export default function PrintableAnalysisReportPage() {
             headers={["اسم الطالب", "الدرجة", "الإتقان", "المستوى", "المهارات الضعيفة", "التنبيه"]}
             emptyText="لا توجد تفاصيل طلاب محفوظة لهذا التقرير."
             rows={studentAnalysis.map((student: any) => [
-              student.student_name || "-",
+              formatStudentDisplayName(formatStudentDisplayName(student.student_name)),
                     student.score_summary || "-",
               `${student.average_mastery ?? 0}%`,
               levelText(student.level),
@@ -368,9 +368,9 @@ export default function PrintableAnalysisReportPage() {
                 `${skill.skill || "-"} — متوسط الإتقان ${skill.average_mastery ?? 0}%`,
                 "إعادة تدريس وتدريب قصير",
               ]),
-              ...studentsAtRisk.slice(0, 5).map((student: any) => [
+              ...studentsAtRisk.slice(0, 3).map((student: any) => [
                 "طالب يحتاج متابعة",
-                `${student.student_name || "-"} — متوسط الإتقان ${student.average_mastery ?? 0}%`,
+                `${formatStudentDisplayName(student.student_name) || "-"} — متوسط الإتقان ${student.average_mastery ?? 0}%`,
                 "تدخل علاجي فردي",
               ]),
             ]}
@@ -386,18 +386,33 @@ export default function PrintableAnalysisReportPage() {
           </ol>
         </Section>
 
-        <footer className="mt-6 border-t border-slate-300 pt-4">
-          <div className="grid grid-cols-2 gap-3 text-sm font-bold text-slate-800">
-            <div className="rounded-xl border border-slate-300 p-3">
+                <footer
+          className="report-footer mt-3 border-t border-slate-300 pt-3"
+          style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
+        >
+          <div className="grid grid-cols-2 gap-3 text-xs font-bold text-slate-800">
+            <div
+              className="rounded-xl border border-slate-300 p-3"
+              style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
+            >
               <p className="font-extrabold">{teacherLabel}</p>
-              <p className="mt-4">{teacherName}</p>
-              <p className="mt-4">التوقيع: ........................</p>
+              <p className="mt-2">{teacherName}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <span>التوقيع:</span>
+                <span className="h-4 flex-1 border-b border-dotted border-slate-500" />
+              </div>
             </div>
 
-            <div className="rounded-xl border border-slate-300 p-3">
+            <div
+              className="rounded-xl border border-slate-300 p-3"
+              style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
+            >
               <p className="font-extrabold">معتمد التقرير</p>
-              <p className="mt-4">{settings?.principal_name || "........................"}</p>
-              <p className="mt-4">التوقيع: ........................</p>
+              <p className="mt-2">{settings?.principal_name || "........................"}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <span>التوقيع:</span>
+                <span className="h-4 flex-1 border-b border-dotted border-slate-500" />
+              </div>
             </div>
           </div>
         </footer>
@@ -636,4 +651,26 @@ function toArabicDigits(value: string) {
 
 
 
+
+
+
+
+
+function formatStudentDisplayName(name?: string | null) {
+  if (!name) return "-";
+
+  const excludedParts = new Set(["بن", "ابن"]);
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part && !excludedParts.has(part));
+
+  if (parts.length <= 4) {
+    return parts.join(" ");
+  }
+
+  return [parts[0], parts[1], parts[2], parts[parts.length - 1]]
+    .filter(Boolean)
+    .join(" ");
+}
 
