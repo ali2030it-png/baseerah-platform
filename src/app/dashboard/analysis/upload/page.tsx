@@ -21,7 +21,7 @@ import {
   masteryLabel,
 } from "@/lib/analysis/skill-analytics";
 
-import { buildAnalysisRecordPayload } from "@/lib/analysis/analysis-records";
+import { saveAnalysisRecordToDatabase } from "@/lib/analysis/save-analysis-record";
 import {
   applyAssessmentMetadataToRows,
   assessmentTimingLabels,
@@ -176,6 +176,13 @@ export default function UploadPage() {
       return;
     }
 
+    const validationMessage = validateAssessmentMetadata(metadata);
+
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
+    }
+
     setSaving(true);
 
     const {
@@ -189,27 +196,26 @@ export default function UploadPage() {
       return;
     }
 
-    const payload = buildAnalysisRecordPayload({
-      userId: user.id,
-      rows,
-      analysis,
-      metadata,
-    });
-
-    const { error: insertError } = await supabase
-      .from("analysis_records")
-      .upsert(payload, {
-        onConflict: "user_id,record_fingerprint",
+    try {
+      const result = await saveAnalysisRecordToDatabase({
+        userId: user.id,
+        rows,
+        analysis,
+        metadata,
       });
 
-    setSaving(false);
-
-    if (insertError) {
-      setError(insertError.message);
-      return;
+      if (result.status === "created") {
+        setSaveMessage("تم حفظ التحليل بنجاح، وسيظهر في صفحة تقاريري ولوحة المدير.");
+      } else if (result.status === "updated") {
+        setSaveMessage("تم تحديث التحليل المحفوظ بنجاح دون إنشاء تقرير مكرر.");
+      } else {
+        setSaveMessage("لم تتغير بيانات الدرجات؛ التقرير محفوظ مسبقًا دون تكرار.");
+      }
+    } catch (saveError: any) {
+      setError(saveError?.message || "تعذر حفظ التحليل.");
     }
 
-    setSaveMessage("تم حفظ التحليل بنجاح، وسيظهر في صفحة تقاريري ولوحة المدير.");
+    setSaving(false);
   }
 
   return (
@@ -542,6 +548,7 @@ function Stat({ title, value }: { title: string; value: string | number }) {
     </div>
   );
 }
+
 
 
 

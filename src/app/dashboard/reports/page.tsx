@@ -18,6 +18,7 @@ type AnalysisRecord = {
   improvement_rate: number | null;
   report_title: string | null;
   created_at: string | null;
+  updated_at: string | null;
 };
 
 const analysisTypeLabels: Record<string, string> = {
@@ -58,10 +59,10 @@ export default function TeacherReportsPage() {
     const { data, error: recordsError } = await supabase
       .from("analysis_records")
       .select(
-        "id,analysis_type,subject,assessment_purpose,assessment_timing,students_count,skills_count,overall_mastery,improvement_rate,report_title,created_at"
+        "id,analysis_type,subject,assessment_purpose,assessment_timing,students_count,skills_count,overall_mastery,improvement_rate,report_title,created_at,updated_at"
       )
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
 
     setLoading(false);
 
@@ -252,7 +253,7 @@ export default function TeacherReportsPage() {
                     </td>
 
                     <td className="p-4 text-xs font-bold text-slate-500">
-                      {formatDate(record.created_at)}
+                      {formatDate(record.updated_at || record.created_at)}
                     </td>
 
                     <td className="p-4">
@@ -341,6 +342,7 @@ function formatDate(value?: string | null) {
 function round(value: number) {
   return Math.round(value * 100) / 100;
 }
+
 
 
 

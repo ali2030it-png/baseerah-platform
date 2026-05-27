@@ -7,7 +7,8 @@ export type AssessmentPurpose =
   | "learning_outcome"
   | "training"
   | "impact_pre"
-  | "impact_post";
+  | "impact_post"
+  | string;
 
 export type AssessmentTiming =
   | "daily"
@@ -18,7 +19,7 @@ export type AssessmentTiming =
   | "national"
   | string;
 
-export type NationalExamType = "none" | "nafs" | "qudrat" | "tahsili";
+export type NationalExamType = "none" | "nafs" | "qudrat" | "tahsili" | string;
 
 export type ParsedAssessmentRow = {
   student_name: string;
@@ -28,25 +29,22 @@ export type ParsedAssessmentRow = {
   learning_outcome: string;
   score: number;
   max_score: number;
-  assessment_purpose: AssessmentPurpose | string;
-  assessment_timing: AssessmentTiming | string;
-  national_exam_type: NationalExamType | string;
+  assessment_purpose: AssessmentPurpose;
+  assessment_timing: AssessmentTiming;
+  national_exam_type: NationalExamType;
   grade_level: string;
   class_name: string;
+  semester: string;
+  assessment_title: string;
   assessment_date: string;
 };
 
-function value(row: Record<string, unknown>, key: string) {
-  return String(row[key] ?? "").trim();
-}
-
-function numberValue(row: Record<string, unknown>, key: string) {
-  const num = Number(row[key]);
-  return Number.isFinite(num) ? num : 0;
-}
-
 function text(value: unknown) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function value(row: Record<string, unknown>, key: string) {
+  return text(row[key]);
 }
 
 function numeric(value: unknown) {
@@ -57,6 +55,10 @@ function numeric(value: unknown) {
 
   const num = Number(cleaned);
   return Number.isFinite(num) ? num : 0;
+}
+
+function numberValue(row: Record<string, unknown>, key: string) {
+  return numeric(row[key]);
 }
 
 export async function parseAssessmentExcel(
@@ -72,35 +74,55 @@ export async function parseAssessmentExcel(
   });
 
   const simpleArabicRows = parseSimpleArabicScoreSheet(matrix);
-
-  if (simpleArabicRows.length > 0) {
-    return simpleArabicRows;
-  }
+  if (simpleArabicRows.length > 0) return simpleArabicRows;
 
   const arabicGradeRows = parseArabicGradeSheet(matrix, file.name);
-
-  if (arabicGradeRows.length > 0) {
-    return arabicGradeRows;
-  }
+  if (arabicGradeRows.length > 0) return arabicGradeRows;
 
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet);
 
   return rows
-    .map((row) => ({
-      student_name: value(row, "student_name"),
-      student_id: value(row, "student_id"),
-      subject: value(row, "subject"),
-      skill: value(row, "skill"),
-      learning_outcome: value(row, "learning_outcome"),
-      score: numberValue(row, "score"),
-      max_score: numberValue(row, "max_score"),
-      assessment_purpose: value(row, "assessment_purpose"),
-      assessment_timing: value(row, "assessment_timing"),
-      national_exam_type: value(row, "national_exam_type") || "none",
-      grade_level: value(row, "grade_level"),
-      class_name: value(row, "class_name"),
-      assessment_date: value(row, "assessment_date"),
-    }))
+    .map((row) => {
+      const skill = value(row, "skill") || "درجة الاختبار";
+      const assessmentTitle =
+        value(row, "assessment_title") ||
+        value(row, "مسمى الاختبار") ||
+        skill ||
+        "درجة الاختبار";
+
+      return {
+        student_name: value(row, "student_name") || value(row, "اسم الطالب"),
+        student_id: value(row, "student_id") || value(row, "رقم الطالب"),
+        subject: value(row, "subject") || value(row, "المادة") || "غير محدد",
+        skill,
+        learning_outcome:
+          value(row, "learning_outcome") ||
+          value(row, "ناتج التعلم") ||
+          skill,
+        score: numberValue(row, "score") || numberValue(row, "درجة الطالب") || numberValue(row, "الدرجة"),
+        max_score:
+          numberValue(row, "max_score") ||
+          numberValue(row, "الدرجة العظمى") ||
+          100,
+        assessment_purpose:
+          value(row, "assessment_purpose") ||
+          value(row, "غرض التقويم") ||
+          "summative",
+        assessment_timing:
+          value(row, "assessment_timing") ||
+          value(row, "نوع الاختبار") ||
+          "",
+        national_exam_type:
+          value(row, "national_exam_type") ||
+          value(row, "نوع الاختبار الوطني") ||
+          "none",
+        grade_level: value(row, "grade_level") || value(row, "الصف"),
+        class_name: value(row, "class_name") || value(row, "الشعبة") || value(row, "الفصل"),
+        semester: value(row, "semester") || value(row, "الفصل الدراسي"),
+        assessment_title: assessmentTitle,
+        assessment_date: value(row, "assessment_date") || value(row, "تاريخ الاختبار"),
+      };
+    })
     .filter((row) => row.student_name && row.skill && row.max_score > 0);
 }
 
@@ -120,39 +142,47 @@ function parseSimpleArabicScoreSheet(matrix: unknown[][]): ParsedAssessmentRow[]
   const headerRow = matrix[headerIndex] || [];
 
   const studentNameIndex = findHeaderIndex(headerRow, ["اسم الطالب", "الطالب"]);
-  const studentIdIndex = findHeaderIndex(headerRow, ["رقم الطالب", "السجل المدني", "رقم الهوية"]);
-  const scoreIndex = findHeaderIndex(headerRow, ["درجة الطالب", "الدرجة", "درجة"]);
+  const studentIdIndex = findHeaderIndex(headerRow, [
+    "رقم الطالب",
+    "السجل المدني",
+    "رقم الهوية",
+  ]);
+  const scoreIndex = findHeaderIndex(headerRow, [
+    "درجة الطالب",
+    "الدرجة",
+    "درجة",
+  ]);
 
   if (studentNameIndex === -1 || scoreIndex === -1) return [];
 
-  const rows: ParsedAssessmentRow[] = [];
+  const result: ParsedAssessmentRow[] = [];
 
   for (let rowIndex = headerIndex + 1; rowIndex < matrix.length; rowIndex++) {
     const row = matrix[rowIndex] || [];
     const studentName = text(row[studentNameIndex]);
-    const studentId = studentIdIndex >= 0 ? text(row[studentIdIndex]) : "";
-    const score = numeric(row[scoreIndex]);
 
     if (!studentName) continue;
 
-    rows.push({
+    result.push({
       student_name: studentName,
-      student_id: studentId,
+      student_id: studentIdIndex >= 0 ? text(row[studentIdIndex]) : "",
       subject: "غير محدد",
       skill: "درجة الطالب",
       learning_outcome: "درجة الطالب",
-      score,
+      score: numeric(row[scoreIndex]),
       max_score: 100,
       assessment_purpose: "summative",
       assessment_timing: "",
       national_exam_type: "none",
       grade_level: "",
       class_name: "",
+      semester: "",
+      assessment_title: "درجة الاختبار",
       assessment_date: "",
     });
   }
 
-  return rows.filter((row) => row.student_name && row.score >= 0);
+  return result.filter((row) => row.student_name);
 }
 
 function parseArabicGradeSheet(
@@ -182,6 +212,8 @@ function parseArabicGradeSheet(
   const classText = findMetadataValue(matrix, "الفصل") || "";
   const { gradeLevel, className } = splitGradeAndClass(classText);
 
+  const timing = detectAssessmentTiming(matrix, fileName);
+
   const scoreColumns = headerRow
     .map((cell, index) => ({
       index,
@@ -202,26 +234,26 @@ function parseArabicGradeSheet(
 
   for (let rowIndex = headerIndex + 2; rowIndex < matrix.length; rowIndex++) {
     const row = matrix[rowIndex] || [];
-
     const studentName = text(row[studentNameIndex]);
-    const studentId = text(row[studentIdIndex]);
 
     if (!studentName) continue;
 
     for (const column of scoreColumns) {
       result.push({
         student_name: studentName,
-        student_id: studentId,
+        student_id: text(row[studentIdIndex]),
         subject,
         skill: column.title,
         learning_outcome: column.title,
         score: numeric(row[column.index]),
         max_score: column.maxScore,
         assessment_purpose: "summative",
-        assessment_timing: detectAssessmentTiming(matrix, fileName),
+        assessment_timing: timing,
         national_exam_type: "none",
         grade_level: gradeLevel,
         class_name: className,
+        semester: "",
+        assessment_title: "درجة الاختبار",
         assessment_date: "",
       });
     }
@@ -232,8 +264,8 @@ function parseArabicGradeSheet(
 
 function findHeaderIndex(row: unknown[], names: string[]) {
   return row.findIndex((cell) => {
-    const value = text(cell);
-    return names.some((name) => value === name || value.includes(name));
+    const current = text(cell);
+    return names.some((name) => current === name || current.includes(name));
   });
 }
 
@@ -305,29 +337,33 @@ export function parsePastedTable(textInput: string): ParsedAssessmentRow[] {
 
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(/\t|,/).map((h) => h.trim());
+  const headers = lines[0].split(/\t|,/).map((header) => header.trim());
 
   return lines.slice(1).map((line) => {
-    const cells = line.split(/\t|,/).map((c) => c.trim());
+    const cells = line.split(/\t|,/).map((cell) => cell.trim());
     const row: Record<string, string> = {};
 
     headers.forEach((header, index) => {
       row[header] = cells[index] ?? "";
     });
 
+    const skill = row.skill || row["المهارة"] || row["درجة الطالب"] || "درجة الطالب";
+
     return {
       student_name: row.student_name || row["اسم الطالب"] || "",
       student_id: row.student_id || row["رقم الطالب"] || "",
       subject: row.subject || row["المادة"] || "",
-      skill: row.skill || row["المهارة"] || row["درجة الطالب"] || "درجة الطالب",
-      learning_outcome: row.learning_outcome || row["ناتج التعلم"] || row["المهارة"] || "درجة الطالب",
+      skill,
+      learning_outcome: row.learning_outcome || row["ناتج التعلم"] || skill,
       score: Number(row.score || row["الدرجة"] || row["درجة الطالب"] || 0),
       max_score: Number(row.max_score || row["الدرجة العظمى"] || 100),
       assessment_purpose: row.assessment_purpose || "summative",
-      assessment_timing: row.assessment_timing || "",
+      assessment_timing: row.assessment_timing || row["نوع الاختبار"] || "",
       national_exam_type: row.national_exam_type || "none",
       grade_level: row.grade_level || row["الصف"] || "",
-      class_name: row.class_name || row["الفصل"] || "",
+      class_name: row.class_name || row["الشعبة"] || row["الفصل"] || "",
+      semester: row.semester || row["الفصل الدراسي"] || "",
+      assessment_title: row.assessment_title || row["مسمى الاختبار"] || "درجة الاختبار",
       assessment_date: row.assessment_date || "",
     };
   });
