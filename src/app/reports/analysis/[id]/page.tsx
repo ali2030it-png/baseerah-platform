@@ -207,7 +207,7 @@ export default function PrintableAnalysisReportPage() {
           </div>
         </header>
 
-        <section className="mt-5 text-center">
+        <section className="mt-4 text-center">
           <h1 className="text-2xl font-extrabold text-slate-950">
             {record.report_title || "تقرير تحليل نتائج الطلاب"}
           </h1>
@@ -241,7 +241,7 @@ export default function PrintableAnalysisReportPage() {
           </section>
         )}
 
-        <section className="mt-5 overflow-hidden rounded-xl border border-slate-300">
+        <section className="mt-4 overflow-hidden rounded-xl border border-slate-300">
           <table className="w-full text-center text-sm">
             <tbody>
               <tr className="bg-slate-50">
@@ -273,7 +273,7 @@ export default function PrintableAnalysisReportPage() {
         </section>
 
         <Section title="الرسوم البيانية">
-          <div className="grid gap-4 md:grid-cols-2 print:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 print:grid-cols-2">
             <ChartCard title="توزيع مستويات الطلاب">
               <ChartBar
                 label="إتقان مرتفع"
@@ -343,10 +343,11 @@ export default function PrintableAnalysisReportPage() {
 
         <Section title="نتائج الطلاب ومستوياتهم">
           <CompactTable
-            headers={["اسم الطالب", "الإتقان", "المستوى", "المهارات الضعيفة", "التنبيه"]}
+            headers={["اسم الطالب", "الدرجة", "الإتقان", "المستوى", "المهارات الضعيفة", "التنبيه"]}
             emptyText="لا توجد تفاصيل طلاب محفوظة لهذا التقرير."
             rows={studentAnalysis.map((student: any) => [
               student.student_name || "-",
+                    student.score_summary || "-",
               `${student.average_mastery ?? 0}%`,
               levelText(student.level),
               Array.isArray(student.weak_skills) && student.weak_skills.length > 0
@@ -386,14 +387,14 @@ export default function PrintableAnalysisReportPage() {
         </Section>
 
         <footer className="mt-6 border-t border-slate-300 pt-4">
-          <div className="grid grid-cols-2 gap-4 text-sm font-bold text-slate-800">
-            <div className="rounded-xl border border-slate-300 p-4">
+          <div className="grid grid-cols-2 gap-3 text-sm font-bold text-slate-800">
+            <div className="rounded-xl border border-slate-300 p-3">
               <p className="font-extrabold">{teacherLabel}</p>
               <p className="mt-4">{teacherName}</p>
               <p className="mt-4">التوقيع: ........................</p>
             </div>
 
-            <div className="rounded-xl border border-slate-300 p-4">
+            <div className="rounded-xl border border-slate-300 p-3">
               <p className="font-extrabold">معتمد التقرير</p>
               <p className="mt-4">{settings?.principal_name || "........................"}</p>
               <p className="mt-4">التوقيع: ........................</p>
@@ -435,7 +436,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-5 rounded-xl border border-slate-300 p-4">
+    <section className="mt-4 rounded-xl border border-slate-300 p-3">
       <h2 className="border-r-4 border-teal-700 pr-3 text-xl font-extrabold text-slate-950">
         {title}
       </h2>
@@ -479,7 +480,7 @@ function CompactTable({
             ))
           ) : (
             <tr>
-              <td colSpan={headers.length} className="p-4 text-center font-bold text-slate-400">
+              <td colSpan={headers.length} className="p-3 text-center font-bold text-slate-400">
                 {emptyText}
               </td>
             </tr>
@@ -498,7 +499,7 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-300 p-4">
+    <div className="rounded-xl border border-slate-300 p-3">
       <h3 className="mb-3 text-base font-extrabold text-slate-950">
         {title}
       </h3>
@@ -620,6 +621,9 @@ function toArabicDigits(value: string) {
 
   return value.replace(/[0-9]/g, (digit) => map[digit] || digit);
 }
+
+
+
 
 
 

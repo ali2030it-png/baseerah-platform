@@ -12,6 +12,9 @@ export type SkillAnalysis = {
   subject: string;
   average_mastery: number;
   total_attempts: number;
+  total_score: number;
+  total_max_score: number;
+  score_summary: string;
   at_risk_count: number;
   level: MasteryLevel;
 };
@@ -20,6 +23,9 @@ export type StudentAnalysis = {
   student_id: string;
   student_name: string;
   average_mastery: number;
+  total_score: number;
+  total_max_score: number;
+  score_summary: string;
   weak_skills: string[];
   mastered_skills: string[];
   level: MasteryLevel;
@@ -29,6 +35,9 @@ export type AssessmentAnalysisResult = {
   total_rows: number;
   total_students: number;
   total_skills: number;
+  total_score: number;
+  total_max_score: number;
+  score_summary: string;
   overall_mastery: number;
   level: MasteryLevel;
   skill_analysis: SkillAnalysis[];
@@ -43,9 +52,26 @@ function round(value: number) {
   return Math.round(value * 10) / 10;
 }
 
+function cleanNumber(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function formatNumber(value: number) {
+  const rounded = cleanNumber(value);
+  return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+}
+
+function scoreSummary(score: number, maxScore: number) {
+  return `${formatNumber(score)} / ${formatNumber(maxScore)}`;
+}
+
+function masteryPercentFromTotals(score: number, maxScore: number) {
+  if (!maxScore || maxScore <= 0) return 0;
+  return round((score / maxScore) * 100);
+}
+
 function masteryPercent(row: ParsedAssessmentRow) {
-  if (!row.max_score || row.max_score <= 0) return 0;
-  return (row.score / row.max_score) * 100;
+  return masteryPercentFromTotals(Number(row.score) || 0, Number(row.max_score) || 0);
 }
 
 export function getMasteryLevel(percent: number): MasteryLevel {
@@ -65,17 +91,28 @@ export function masteryLabel(level: MasteryLevel) {
 export function analyzeAssessmentRows(
   rows: ParsedAssessmentRow[]
 ): AssessmentAnalysisResult {
-  const validRows = rows.filter(
-    (row) => row.student_name && row.skill && row.max_score > 0
+  const validRows = rows.filter((row) => {
+    const score = Number(row.score);
+    const maxScore = Number(row.max_score);
+
+    return (
+      row.student_name &&
+      row.skill &&
+      Number.isFinite(score) &&
+      Number.isFinite(maxScore) &&
+      maxScore > 0
+    );
+  });
+
+  const totalScore = cleanNumber(
+    validRows.reduce((sum, row) => sum + (Number(row.score) || 0), 0)
   );
 
-  const overall =
-    validRows.length === 0
-      ? 0
-      : round(
-          validRows.reduce((sum, row) => sum + masteryPercent(row), 0) /
-            validRows.length
-        );
+  const totalMaxScore = cleanNumber(
+    validRows.reduce((sum, row) => sum + (Number(row.max_score) || 0), 0)
+  );
+
+  const overall = masteryPercentFromTotals(totalScore, totalMaxScore);
 
   const skillMap = new Map<string, ParsedAssessmentRow[]>();
 
@@ -89,9 +126,16 @@ export function analyzeAssessmentRows(
   const skill_analysis: SkillAnalysis[] = Array.from(skillMap.values())
     .map((items) => {
       const first = items[0];
-      const average = round(
-        items.reduce((sum, row) => sum + masteryPercent(row), 0) / items.length
+
+      const skillScore = cleanNumber(
+        items.reduce((sum, row) => sum + (Number(row.score) || 0), 0)
       );
+
+      const skillMaxScore = cleanNumber(
+        items.reduce((sum, row) => sum + (Number(row.max_score) || 0), 0)
+      );
+
+      const average = masteryPercentFromTotals(skillScore, skillMaxScore);
 
       return {
         skill: first.skill,
@@ -99,6 +143,9 @@ export function analyzeAssessmentRows(
         subject: first.subject,
         average_mastery: average,
         total_attempts: items.length,
+        total_score: skillScore,
+        total_max_score: skillMaxScore,
+        score_summary: scoreSummary(skillScore, skillMaxScore),
         at_risk_count: items.filter((row) => masteryPercent(row) < 60).length,
         level: getMasteryLevel(average),
       };
@@ -118,9 +165,15 @@ export function analyzeAssessmentRows(
     .map(([studentKey, items]) => {
       const first = items[0];
 
-      const average = round(
-        items.reduce((sum, row) => sum + masteryPercent(row), 0) / items.length
+      const studentScore = cleanNumber(
+        items.reduce((sum, row) => sum + (Number(row.score) || 0), 0)
       );
+
+      const studentMaxScore = cleanNumber(
+        items.reduce((sum, row) => sum + (Number(row.max_score) || 0), 0)
+      );
+
+      const average = masteryPercentFromTotals(studentScore, studentMaxScore);
 
       const weakSkills = items
         .filter((row) => masteryPercent(row) < 60)
@@ -134,6 +187,9 @@ export function analyzeAssessmentRows(
         student_id: first.student_id || studentKey,
         student_name: first.student_name,
         average_mastery: average,
+        total_score: studentScore,
+        total_max_score: studentMaxScore,
+        score_summary: scoreSummary(studentScore, studentMaxScore),
         weak_skills: Array.from(new Set(weakSkills)),
         mastered_skills: Array.from(new Set(masteredSkills)),
         level: getMasteryLevel(average),
@@ -152,13 +208,16 @@ export function analyzeAssessmentRows(
 
   const students_at_risk = student_analysis.filter(
     (student) =>
-      student.level === "at_risk" || student.weak_skills.length > 0
+      student.level === "at_risk" || student.level === "needs_improvement"
   );
 
   return {
     total_rows: validRows.length,
     total_students: student_analysis.length,
     total_skills: skill_analysis.length,
+    total_score: totalScore,
+    total_max_score: totalMaxScore,
+    score_summary: scoreSummary(totalScore, totalMaxScore),
     overall_mastery: overall,
     level: getMasteryLevel(overall),
     skill_analysis,
@@ -184,8 +243,18 @@ function buildEducationalSummary(
   }
 
   if (weakestSkill) {
-    return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، مع بروز مهارة "${weakestSkill.skill}" كأولوية علاجية؛ إذ بلغ متوسط إتقانها ${weakestSkill.average_mastery}%. ويوصى بتنفيذ تدخلات علاجية مركزة للطلاب المتعثرين وعددهم ${riskCount}.`;
+    const priorityLabel =
+      weakestSkill.level === "at_risk" ? "أولوية علاجية عاجلة" : "أولوية تحسين";
+
+    const actionLabel =
+      weakestSkill.level === "at_risk"
+        ? "تدخلات علاجية مركزة"
+        : "إعادة تدريس قصيرة وأنشطة إثرائية علاجية";
+
+    return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، مع بروز مهارة "${weakestSkill.skill}" بوصفها ${priorityLabel}؛ إذ بلغ متوسط إتقانها ${weakestSkill.average_mastery}%. ويوصى بتنفيذ ${actionLabel} للطلاب المحتاجين للمتابعة وعددهم ${riskCount}.`;
   }
 
   return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، ولا تظهر مهارات حرجة بدرجة عالية، مع أهمية الاستمرار في التقويم التكويني والمتابعة الدورية.`;
 }
+
+
