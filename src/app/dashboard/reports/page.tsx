@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BarChart3, FileText, Search, UploadCloud } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { DeleteAnalysisRecordButton } from "@/components/basirah/DeleteAnalysisRecordButton";
 
 type AnalysisRecord = {
   id: string;
@@ -217,6 +218,7 @@ export default function TeacherReportsPage() {
                   <th className="p-4">المهارات</th>
                   <th className="p-4">الإتقان</th>
                   <th className="p-4">التاريخ</th>
+                  <th className="p-4">الإجراء</th>
                 </tr>
               </thead>
 
@@ -251,6 +253,27 @@ export default function TeacherReportsPage() {
 
                     <td className="p-4 text-xs font-bold text-slate-500">
                       {formatDate(record.created_at)}
+                    </td>
+
+                    <td className="p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/reports/analysis/${record.id}`}
+                          className="inline-flex rounded-xl bg-slate-950 px-4 py-2 text-xs font-black text-white"
+                        >
+                          عرض التقرير
+                        </Link>
+
+                        <DeleteAnalysisRecordButton
+                          recordId={record.id}
+                          reportTitle={record.report_title}
+                          onDeleted={() =>
+                            setRecords((currentRecords) =>
+                              currentRecords.filter((item) => item.id !== record.id)
+                            )
+                          }
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -318,3 +341,7 @@ function formatDate(value?: string | null) {
 function round(value: number) {
   return Math.round(value * 100) / 100;
 }
+
+
+
+

@@ -179,7 +179,7 @@ export default function PrintableAnalysisReportPage() {
 
       <article className="mx-auto max-w-5xl rounded-2xl bg-white p-6 shadow-sm print:max-w-none print:rounded-none print:p-0 print:shadow-none">
         <header className="border-b border-slate-300 pb-4">
-          <div className="grid grid-cols-[1fr_280px_1fr] items-start gap-16">
+          <div className="grid grid-cols-[1fr_190px_1fr] items-start gap-6">
             <div className="text-center text-[13px] font-bold leading-7 text-slate-900">
               <p>المملكة العربية السعودية</p>
               <p>وزارة التعليم</p>
@@ -187,7 +187,7 @@ export default function PrintableAnalysisReportPage() {
               <p>{settings?.school_name || "اسم المدرسة"}</p>
             </div>
 
-            <div className="flex justify-center px-16 pt-1">
+            <div className="flex justify-center px-4 pt-1">
               <img
                 src="/moe-logo.png"
                 alt="شعار وزارة التعليم"
@@ -195,9 +195,9 @@ export default function PrintableAnalysisReportPage() {
               />
             </div>
 
-            <div className="pr-20 text-right text-[13px] font-bold leading-7 text-slate-900">
-              <p>رقم التقرير: {shortReportNumber(record.id)}</p>
-              <p>تاريخ التقرير: {formatDate(record.created_at)}</p>
+            <div className="pr-3 text-right text-[13px] font-bold leading-7 text-slate-900">
+              <p>رقم التقرير: {formatArabicReportNumber(record.id)}</p>
+              <p>تاريخ التقرير: {formatHijriDate(record.created_at)}</p>
               <p>نوع التحليل: {getAnalysisTypeLabel(record.analysis_type)}</p>
             </div>
           </div>
@@ -554,14 +554,52 @@ function formatTiming(value?: string | null) {
   return timingLabels[value] || value;
 }
 
-function shortReportNumber(id: string) {
-  return id.slice(0, 8).toUpperCase();
+function formatArabicReportNumber(id: string) {
+  let hash = 0;
+
+  for (let index = 0; index < id.length; index++) {
+    hash = (hash * 31 + id.charCodeAt(index)) >>> 0;
+  }
+
+  const number = String(hash).slice(0, 8).padStart(8, "0");
+  return toArabicDigits(number);
 }
 
-function formatDate(value?: string | null) {
+function formatHijriDate(value?: string | null) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(new Date(value));
+
+  const date = new Date(value);
+
+  const formatted = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+
+  return formatted.includes("هـ") ? formatted : `${formatted} هـ`;
 }
+
+function toArabicDigits(value: string) {
+  const map: Record<string, string> = {
+    "0": "٠",
+    "1": "١",
+    "2": "٢",
+    "3": "٣",
+    "4": "٤",
+    "5": "٥",
+    "6": "٦",
+    "7": "٧",
+    "8": "٨",
+    "9": "٩",
+  };
+
+  return value.replace(/[0-9]/g, (digit) => map[digit] || digit);
+}
+
+
+
+
+
 
 
 

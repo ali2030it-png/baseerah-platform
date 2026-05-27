@@ -79,5 +79,7 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/dashboard/:path*",
+    "/reports/analysis/:path*",
   ],
 };
+

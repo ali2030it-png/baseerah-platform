@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Camera,
   ClipboardPaste,
@@ -22,6 +22,11 @@ import {
 } from "@/lib/analysis/skill-analytics";
 
 import { buildAnalysisRecordPayload } from "@/lib/analysis/analysis-records";
+import {
+  applyAssessmentMetadataToRows,
+  defaultAssessmentMetadata,
+  validateAssessmentMetadata,
+} from "@/lib/analysis/assessment-metadata";
 import { supabase } from "@/lib/supabase/client";
 
 type InputMode = "excel" | "quick" | "paste" | "image";
@@ -45,6 +50,32 @@ const timingLabels: Record<string, string> = {
   national: "اختبار وطني",
 };
 
+const subjectLabels: Record<string, string> = {
+  "": "اختر المادة",
+  "الرياضيات": "الرياضيات",
+  "لغتي": "لغتي",
+  "العلوم": "العلوم",
+  "اللغة الإنجليزية": "اللغة الإنجليزية",
+  "الدراسات الإسلامية": "الدراسات الإسلامية",
+  "الدراسات الاجتماعية": "الدراسات الاجتماعية",
+  "المهارات الرقمية": "المهارات الرقمية",
+  "التربية الفنية": "التربية الفنية",
+  "التربية البدنية": "التربية البدنية",
+};
+
+const assessmentTimingLabels: Record<string, string> = {
+  "": "اختر نوع الاختبار",
+  "اختبار قصير": "اختبار قصير",
+  "اختبار تشخيصي": "اختبار تشخيصي",
+  "اختبار تكويني": "اختبار تكويني",
+  "نهاية الفترة الأولى": "نهاية الفترة الأولى",
+  "نهاية الفترة الثانية": "نهاية الفترة الثانية",
+  "نهاية الفصل الدراسي الأول": "نهاية الفصل الدراسي الأول",
+  "نهاية الفصل الدراسي الثاني": "نهاية الفصل الدراسي الثاني",
+  "نهاية الفصل الدراسي الثالث": "نهاية الفصل الدراسي الثالث",
+  "نهاية العام": "نهاية العام",
+};
+
 export default function UploadPage() {
   const [mode, setMode] = useState<InputMode>("excel");
   const [rows, setRows] = useState<ParsedAssessmentRow[]>([]);
@@ -53,6 +84,7 @@ export default function UploadPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [metadata, setMetadata] = useState(defaultAssessmentMetadata);
 
   const [quick, setQuick] = useState<ParsedAssessmentRow>({
     student_name: "",
@@ -77,9 +109,22 @@ export default function UploadPage() {
     setSaveMessage("");
   }
 
+  function validateMetadataBeforeImport() {
+    const validationMessage = validateAssessmentMetadata(metadata);
+
+    if (validationMessage) {
+      setError(validationMessage);
+      return false;
+    }
+
+    return true;
+  }
+
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (!validateMetadataBeforeImport()) return;
 
     setLoading(true);
     setError("");
@@ -87,26 +132,49 @@ export default function UploadPage() {
 
     try {
       const parsed = await parseAssessmentExcel(file);
-      replaceRows(parsed);
+      const enrichedRows = applyAssessmentMetadataToRows(parsed, metadata);
+      replaceRows(enrichedRows);
     } catch {
-      setError("تعذر قراءة ملف Excel. تأكد من استخدام قالب بصيرة الموحد.");
+      setError("تعذر قراءة ملف Excel. تأكد من استخدام قالب بصيرة العربي.");
     }
 
     setLoading(false);
   }
 
   function handlePasteParse() {
+    if (!validateMetadataBeforeImport()) return;
+
     const parsed = parsePastedTable(pasteText);
-    replaceRows(parsed);
+    const enrichedRows = applyAssessmentMetadataToRows(parsed, metadata);
+
+    replaceRows(enrichedRows);
   }
 
   function addQuickRow() {
-    if (!quick.student_name || !quick.subject || !quick.skill) {
-      setError("أكمل اسم الطالب والمادة والمهارة.");
+    if (!quick.student_name) {
+      setError("أكمل اسم الطالب.");
       return;
     }
 
-    replaceRows([...rows, quick]);
+    const validationMessage = validateAssessmentMetadata(metadata);
+
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
+    }
+
+    const enriched = applyAssessmentMetadataToRows(
+      [
+        {
+          ...quick,
+          score: Number(quick.score) || 0,
+          max_score: Number(metadata.max_score) || Number(quick.max_score) || 100,
+        },
+      ],
+      metadata
+    )[0];
+
+    replaceRows([...rows, enriched]);
     setError("");
 
     setQuick({
@@ -147,7 +215,9 @@ export default function UploadPage() {
 
     const { error: insertError } = await supabase
       .from("analysis_records")
-      .insert(payload);
+      .upsert(payload, {
+        onConflict: "user_id,record_fingerprint",
+      });
 
     setSaving(false);
 
@@ -156,7 +226,7 @@ export default function UploadPage() {
       return;
     }
 
-    setSaveMessage("تم حفظ التحليل بنجاح، وسيظهر في لوحة المدير وتقارير التحليلات.");
+    setSaveMessage("تم حفظ التحليل بنجاح، وسيظهر في صفحة تقاريري ولوحة المدير.");
   }
 
   return (
@@ -165,7 +235,7 @@ export default function UploadPage() {
         <p className="text-sm font-black text-teal-700">مركز إدخال النتائج</p>
         <h1 className="mt-2 text-3xl font-black">إدخال نتائج الطلاب</h1>
         <p className="mt-2 max-w-3xl text-sm font-bold leading-7 text-slate-600">
-          اختر الطريقة الأنسب: رفع Excel، إدخال سريع من الجوال، لصق جدول، أو تصوير النتيجة لاحقًا.
+          عرّف الاختبار أولًا، ثم ارفع ملف Excel أو أدخل النتائج يدويًا.
         </p>
 
         <div className="mt-6 grid gap-3 md:grid-cols-4">
@@ -176,11 +246,82 @@ export default function UploadPage() {
         </div>
       </section>
 
+      <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-black text-teal-700">
+              بيانات الاختبار قبل رفع الملف
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-slate-950">
+              عرّف الاختبار أولًا
+            </h2>
+            <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
+              هذه البيانات ستظهر في التحليل والتقرير، وتعالج نقص البيانات في ملفات Excel.
+            </p>
+          </div>
+
+          <a
+            href="/templates/baseerah-simple"
+            className="inline-flex rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white"
+          >
+            تحميل قالب Excel العربي
+          </a>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <Select
+            label="المادة"
+            value={metadata.subject}
+            options={subjectLabels}
+            onChange={(value) => setMetadata({ ...metadata, subject: value })}
+          />
+
+          <Input
+            label="الصف"
+            value={metadata.grade_level}
+            onChange={(value) => setMetadata({ ...metadata, grade_level: value })}
+          />
+
+          <Input
+            label="الفصل"
+            value={metadata.class_name}
+            onChange={(value) => setMetadata({ ...metadata, class_name: value })}
+          />
+
+          <Select
+            label="نوع الاختبار"
+            value={metadata.assessment_timing}
+            options={assessmentTimingLabels}
+            onChange={(value) =>
+              setMetadata({ ...metadata, assessment_timing: value })
+            }
+          />
+
+          <Input
+            label="مسمى الاختبار أو المهارة"
+            value={metadata.assessment_title}
+            onChange={(value) =>
+              setMetadata({ ...metadata, assessment_title: value })
+            }
+          />
+
+          <NumberInput
+            label="الدرجة العظمى"
+            value={metadata.max_score}
+            onChange={(value) => setMetadata({ ...metadata, max_score: value })}
+          />
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-teal-100 bg-teal-50 p-4 text-sm font-bold leading-7 text-teal-800">
+          القالب العربي البسيط المقترح: رقم الطالب، اسم الطالب، درجة الطالب.
+        </div>
+      </section>
+
       {mode === "excel" && (
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black">رفع قالب بصيرة الموحد</h2>
+          <h2 className="text-xl font-black">رفع ملف الدرجات</h2>
           <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
-            الأعمدة المطلوبة: student_name, student_id, subject, skill, learning_outcome, score, max_score, assessment_purpose, assessment_timing, national_exam_type, grade_level, class_name, assessment_date
+            استخدم قالب بصيرة العربي البسيط، أو ملفًا يحتوي على أسماء الطلاب ودرجاتهم.
           </p>
 
           <label className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white hover:bg-teal-800">
@@ -198,15 +339,7 @@ export default function UploadPage() {
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <Input label="اسم الطالب" value={quick.student_name} onChange={(v) => setQuick({ ...quick, student_name: v })} />
             <Input label="رقم الطالب" value={quick.student_id} onChange={(v) => setQuick({ ...quick, student_id: v })} />
-            <Input label="المادة" value={quick.subject} onChange={(v) => setQuick({ ...quick, subject: v })} />
-            <Input label="المهارة" value={quick.skill} onChange={(v) => setQuick({ ...quick, skill: v })} />
-            <Input label="ناتج التعلم" value={quick.learning_outcome} onChange={(v) => setQuick({ ...quick, learning_outcome: v })} />
-            <Input label="الصف" value={quick.grade_level} onChange={(v) => setQuick({ ...quick, grade_level: v })} />
-            <Input label="الفصل" value={quick.class_name} onChange={(v) => setQuick({ ...quick, class_name: v })} />
             <NumberInput label="الدرجة" value={quick.score} onChange={(v) => setQuick({ ...quick, score: v })} />
-            <NumberInput label="الدرجة العظمى" value={quick.max_score} onChange={(v) => setQuick({ ...quick, max_score: v })} />
-            <Select label="غرض التقويم" value={quick.assessment_purpose} options={purposeLabels} onChange={(v) => setQuick({ ...quick, assessment_purpose: v })} />
-            <Select label="توقيت الاختبار" value={quick.assessment_timing} options={timingLabels} onChange={(v) => setQuick({ ...quick, assessment_timing: v })} />
           </div>
 
           <button onClick={addQuickRow} className="mt-5 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white">
@@ -218,12 +351,17 @@ export default function UploadPage() {
       {mode === "paste" && (
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black">لصق جدول من Excel</h2>
+          <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
+            الصق جدولًا يحتوي على: رقم الطالب، اسم الطالب، درجة الطالب.
+          </p>
+
           <textarea
             value={pasteText}
             onChange={(event) => setPasteText(event.target.value)}
             className="mt-4 min-h-48 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold outline-none focus:border-teal-600"
-            placeholder="الصق الجدول هنا مع صف العناوين..."
+            placeholder="رقم الطالباسم الطالبدرجة الطالب"
           />
+
           <button onClick={handlePasteParse} className="mt-4 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white">
             تحليل النص الملصق
           </button>
@@ -293,80 +431,123 @@ export default function UploadPage() {
               <Stat title="صفوف البيانات الصحيحة" value={analysis.total_rows} />
             </div>
           </section>
-
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-5 text-xl font-black">المهارات حسب مستوى الإتقان</h2>
-
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="w-full min-w-[900px] text-right text-sm">
-                <thead className="bg-slate-50 text-xs font-black text-slate-500">
-                  <tr>
-                    <th className="p-4">المادة</th>
-                    <th className="p-4">المهارة</th>
-                    <th className="p-4">ناتج التعلم</th>
-                    <th className="p-4">متوسط الإتقان</th>
-                    <th className="p-4">التصنيف</th>
-                    <th className="p-4">عدد المتعثرين</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {analysis.skill_analysis.map((skill, index) => (
-                    <tr key={index}>
-                      <td className="p-4">{skill.subject}</td>
-                      <td className="p-4 font-bold">{skill.skill}</td>
-                      <td className="p-4">{skill.learning_outcome}</td>
-                      <td className="p-4 font-black text-teal-700">{skill.average_mastery}%</td>
-                      <td className="p-4">{masteryLabel(skill.level)}</td>
-                      <td className="p-4">{skill.at_risk_count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
         </>
       )}
     </main>
   );
 }
 
-function ModeButton({ active, onClick, icon, title }: { active: boolean; onClick: () => void; icon: React.ReactNode; title: string }) {
+function ModeButton({
+  active,
+  onClick,
+  icon,
+  title,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: ReactNode;
+  title: string;
+}) {
   return (
-    <button onClick={onClick} className={["flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-black transition", active ? "border-teal-200 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-600"].join(" ")}>
+    <button
+      onClick={onClick}
+      className={[
+        "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-black transition",
+        active
+          ? "border-teal-200 bg-teal-50 text-teal-800"
+          : "border-slate-200 bg-white text-slate-600",
+      ].join(" ")}
+    >
       {icon}
       {title}
     </button>
   );
 }
 
-function Input({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function Input({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
-    <label className="grid gap-2">
+    <label className="block">
       <span className="text-sm font-black text-slate-700">{label}</span>
-      <input value={value} onChange={(e) => onChange(e.target.value)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-teal-600" />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none focus:border-teal-600"
+      />
     </label>
   );
 }
 
-function NumberInput({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+function NumberInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
   return (
-    <label className="grid gap-2">
+    <label className="block">
       <span className="text-sm font-black text-slate-700">{label}</span>
-      <input type="number" value={value} onChange={(e) => onChange(Number(e.target.value))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-teal-600" />
+      <input
+        type="number"
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none focus:border-teal-600"
+      />
     </label>
   );
 }
 
-function Select({ label, value, options, onChange }: { label: string; value: string; options: Record<string, string>; onChange: (value: string) => void }) {
+function Select({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: Record<string, string>;
+  onChange: (value: string) => void;
+}) {
   return (
-    <label className="grid gap-2">
+    <label className="block">
       <span className="text-sm font-black text-slate-700">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-teal-600">
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none focus:border-teal-600"
+      >
         {Object.entries(options).map(([key, label]) => (
-          <option key={key} value={key}>{label}</option>
+          <option key={key} value={key}>
+            {label}
+          </option>
         ))}
       </select>
     </label>
+  );
+}
+
+function Notice({ text, danger = false }: { text: string; danger?: boolean }) {
+  return (
+    <section
+      className={[
+        "rounded-[2rem] border p-5 text-sm font-black",
+        danger
+          ? "border-rose-200 bg-rose-50 text-rose-700"
+          : "border-teal-100 bg-teal-50 text-teal-800",
+      ].join(" ")}
+    >
+      {text}
+    </section>
   );
 }
 
@@ -374,17 +555,7 @@ function Stat({ title, value }: { title: string; value: string | number }) {
   return (
     <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-xs font-black text-slate-500">{title}</p>
-      <h2 className="mt-2 text-3xl font-black text-teal-700">{value}</h2>
+      <p className="mt-2 text-2xl font-black text-teal-700">{value}</p>
     </div>
   );
 }
-
-function Notice({ text, danger = false }: { text: string; danger?: boolean }) {
-  return (
-    <section className={["rounded-[2rem] border p-5 text-sm font-black", danger ? "border-rose-100 bg-rose-50 text-rose-700" : "border-slate-200 bg-white text-slate-600"].join(" ")}>
-      {text}
-    </section>
-  );
-}
-
-
