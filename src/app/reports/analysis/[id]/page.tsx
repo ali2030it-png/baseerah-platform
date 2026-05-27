@@ -179,7 +179,7 @@ export default function PrintableAnalysisReportPage() {
 
       <article className="mx-auto max-w-5xl rounded-2xl bg-white p-6 shadow-sm print:max-w-none print:rounded-none print:p-0 print:shadow-none">
         <header className="border-b border-slate-300 pb-4">
-          <div className="grid grid-cols-[1fr_230px_1fr] items-start gap-12">
+          <div className="grid grid-cols-[1fr_280px_1fr] items-start gap-16">
             <div className="text-center text-[13px] font-bold leading-7 text-slate-900">
               <p>المملكة العربية السعودية</p>
               <p>وزارة التعليم</p>
@@ -187,7 +187,7 @@ export default function PrintableAnalysisReportPage() {
               <p>{settings?.school_name || "اسم المدرسة"}</p>
             </div>
 
-            <div className="flex justify-center px-12 pt-1">
+            <div className="flex justify-center px-16 pt-1">
               <img
                 src="/moe-logo.png"
                 alt="شعار وزارة التعليم"
@@ -195,7 +195,7 @@ export default function PrintableAnalysisReportPage() {
               />
             </div>
 
-            <div className="pr-14 text-right text-[13px] font-bold leading-7 text-slate-900">
+            <div className="pr-20 text-right text-[13px] font-bold leading-7 text-slate-900">
               <p>رقم التقرير: {shortReportNumber(record.id)}</p>
               <p>تاريخ التقرير: {formatDate(record.created_at)}</p>
               <p>نوع التحليل: {getAnalysisTypeLabel(record.analysis_type)}</p>
@@ -332,37 +332,24 @@ export default function PrintableAnalysisReportPage() {
           />
         </Section>
 
-        <section className="mt-5 grid gap-4 md:grid-cols-2 print:grid-cols-2">
-          <div className="rounded-xl border border-slate-300 p-4">
-            <h2 className="text-base font-extrabold text-slate-950">المهارات ذات الأولوية العلاجية</h2>
-            <ul className="mt-3 space-y-2 text-sm font-bold leading-7 text-slate-700">
-              {weakSkills.length > 0 ? (
-                weakSkills.slice(0, 6).map((skill: any, index: number) => (
-                  <li key={`${skill.skill}-${index}`}>
-                    • {skill.skill} — متوسط الإتقان {skill.average_mastery}%
-                  </li>
-                ))
-              ) : (
-                <li>لا توجد مهارات حرجة بدرجة عالية في هذا التحليل.</li>
-              )}
-            </ul>
-          </div>
-
-          <div className="rounded-xl border border-slate-300 p-4">
-            <h2 className="text-base font-extrabold text-slate-950">الطلاب الذين يحتاجون متابعة</h2>
-            <ul className="mt-3 space-y-2 text-sm font-bold leading-7 text-slate-700">
-              {studentsAtRisk.length > 0 ? (
-                studentsAtRisk.slice(0, 8).map((student: any, index: number) => (
-                  <li key={`${student.student_name}-${index}`}>
-                    • {student.student_name} — متوسط الإتقان {student.average_mastery}%
-                  </li>
-                ))
-              ) : (
-                <li>لا توجد حالات تعثر بارزة في هذا التحليل.</li>
-              )}
-            </ul>
-          </div>
-        </section>
+        <Section title="أولويات المتابعة العلاجية">
+          <CompactTable
+            headers={["البند", "التفصيل", "الإجراء المقترح"]}
+            emptyText="لا توجد أولويات علاجية بارزة في هذا التحليل."
+            rows={[
+              ...weakSkills.slice(0, 3).map((skill: any) => [
+                "مهارة حرجة",
+                `${skill.skill || "-"} — متوسط الإتقان ${skill.average_mastery ?? 0}%`,
+                "إعادة تدريس وتدريب قصير",
+              ]),
+              ...studentsAtRisk.slice(0, 5).map((student: any) => [
+                "طالب يحتاج متابعة",
+                `${student.student_name || "-"} — متوسط الإتقان ${student.average_mastery ?? 0}%`,
+                "تدخل علاجي فردي",
+              ]),
+            ]}
+          />
+        </Section>
 
         <Section title="التوصيات العلاجية">
           <ol className="list-decimal space-y-2 pr-5 text-sm font-bold leading-7 text-slate-700">
@@ -575,6 +562,8 @@ function formatDate(value?: string | null) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(new Date(value));
 }
+
+
 
 
 
