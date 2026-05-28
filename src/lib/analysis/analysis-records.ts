@@ -1,6 +1,8 @@
 import { ParsedAssessmentRow } from "@/lib/analysis/excel-parser";
 import type { AssessmentMetadata } from "@/lib/analysis/assessment-metadata";
 
+const ANALYSIS_ALGORITHM_VERSION = "official-report-v4";
+
 type BuildAnalysisRecordPayloadInput = {
   userId: string;
   rows: ParsedAssessmentRow[];
@@ -137,7 +139,7 @@ function buildContentHash(rows: ParsedAssessmentRow[]) {
     .map((row) => `${row.student}|${row.name}|${row.skill}|${row.score}|${row.max}`)
     .join("\n");
 
-  return hashText(canonicalRows);
+  return hashText(`${ANALYSIS_ALGORITHM_VERSION}\n${canonicalRows}`);
 }
 
 function normalizeKeyPart(value?: string | number | null) {
@@ -227,4 +229,7 @@ function getAnalysisTypeLabel(type?: string | null) {
 
   return labels[type || ""] || "ختامي";
 }
+
+
+
 

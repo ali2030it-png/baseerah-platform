@@ -324,11 +324,16 @@ export default function PrintableAnalysisReportPage() {
             {snapshot?.educational_summary ||
               `بلغ متوسط الإتقان العام ${record.overall_mastery ?? 0}%، ويعرض هذا التقرير ملخصًا تربويًا للنتائج المحفوظة.`}
           </p>
+          {snapshot?.calculation_method && (
+            <p className="mt-2 rounded-xl bg-slate-50 p-2 text-[11px] font-bold leading-6 text-slate-600">
+              {snapshot.calculation_method}
+            </p>
+          )}
         </Section>
 
         <Section title="تحليل المهارات ومستويات الإتقان">
           <CompactTable
-            headers={["المهارة", "ناتج التعلم", "الإتقان", "المستوى", "المتعثرون", "التنبيه"]}
+            headers={["المهارة", "ناتج التعلم", "الإتقان", "المستوى", "طلاب بحاجة متابعة", "التنبيه"]}
             emptyText="لا توجد تفاصيل مهارات محفوظة لهذا التقرير."
             rows={skillAnalysis.map((skill: any) => [
               skill.skill || "-",
@@ -343,16 +348,17 @@ export default function PrintableAnalysisReportPage() {
 
         <Section title="نتائج الطلاب ومستوياتهم">
           <CompactTable
-            headers={["اسم الطالب", "الدرجة", "الإتقان", "المستوى", "المهارات الضعيفة", "التنبيه"]}
+            headers={["اسم الطالب", "الدرجة", "الإتقان", "المستوى", "مجال المتابعة", "التنبيه"]}
             emptyText="لا توجد تفاصيل طلاب محفوظة لهذا التقرير."
             rows={studentAnalysis.map((student: any) => [
               formatStudentDisplayName(formatStudentDisplayName(student.student_name)),
                     student.score_summary || "-",
               `${student.average_mastery ?? 0}%`,
               levelText(student.level),
-              Array.isArray(student.weak_skills) && student.weak_skills.length > 0
-                ? student.weak_skills.join("، ")
-                : "لا توجد",
+              student.follow_up_area ||
+                (Array.isArray(student.weak_skills) && student.weak_skills.length > 0
+                  ? student.weak_skills.join("، ")
+                  : "لا يوجد"),
               getStudentAlert(student.level),
             ])}
           />
@@ -364,9 +370,9 @@ export default function PrintableAnalysisReportPage() {
             emptyText="لا توجد أولويات علاجية بارزة في هذا التحليل."
             rows={[
               ...weakSkills.slice(0, 3).map((skill: any) => [
-                "مهارة حرجة",
+                skill.priority_label || "أولوية تحسين",
                 `${skill.skill || "-"} — متوسط الإتقان ${skill.average_mastery ?? 0}%`,
-                "إعادة تدريس وتدريب قصير",
+                skill.recommended_action || "إعادة تدريس قصيرة وتدريب موجّه",
               ]),
               ...studentsAtRisk.slice(0, 3).map((student: any) => [
                 "طالب يحتاج متابعة",
@@ -673,4 +679,19 @@ function formatStudentDisplayName(name?: string | null) {
     .filter(Boolean)
     .join(" ");
 }
+
+
+
+
+
+function getMasteryBarColor(percent?: number | null) {
+  const value = Number(percent) || 0;
+
+  if (value < 60) return "bg-rose-500";
+  if (value < 75) return "bg-amber-500";
+  if (value < 90) return "bg-emerald-600";
+
+  return "bg-teal-700";
+}
+
 

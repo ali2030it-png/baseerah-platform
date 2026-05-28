@@ -17,6 +17,8 @@ export type SkillAnalysis = {
   score_summary: string;
   at_risk_count: number;
   level: MasteryLevel;
+  priority_label: string;
+  recommended_action: string;
 };
 
 export type StudentAnalysis = {
@@ -28,6 +30,8 @@ export type StudentAnalysis = {
   score_summary: string;
   weak_skills: string[];
   mastered_skills: string[];
+  follow_up_area: string;
+  alert_label: string;
   level: MasteryLevel;
 };
 
@@ -46,7 +50,11 @@ export type AssessmentAnalysisResult = {
   top_skills: SkillAnalysis[];
   students_at_risk: StudentAnalysis[];
   educational_summary: string;
+  calculation_method: string;
 };
+
+const CALCULATION_METHOD =
+  "تم احتساب الإتقان وفق المعادلة: مجموع الدرجات المحصلة ÷ مجموع الدرجات العظمى × 100.";
 
 function round(value: number) {
   return Math.round(value * 10) / 10;
@@ -71,7 +79,10 @@ function masteryPercentFromTotals(score: number, maxScore: number) {
 }
 
 function masteryPercent(row: ParsedAssessmentRow) {
-  return masteryPercentFromTotals(Number(row.score) || 0, Number(row.max_score) || 0);
+  return masteryPercentFromTotals(
+    Number(row.score) || 0,
+    Number(row.max_score) || 0
+  );
 }
 
 export function getMasteryLevel(percent: number): MasteryLevel {
@@ -86,6 +97,27 @@ export function masteryLabel(level: MasteryLevel) {
   if (level === "mastered") return "متقن";
   if (level === "needs_improvement") return "بحاجة إلى تحسين";
   return "متعثر";
+}
+
+function skillPriorityLabel(level: MasteryLevel) {
+  if (level === "at_risk") return "مهارة حرجة";
+  if (level === "needs_improvement") return "أولوية تحسين";
+  if (level === "mastered") return "مهارة متقنة";
+  return "نقطة قوة";
+}
+
+function skillRecommendedAction(level: MasteryLevel) {
+  if (level === "at_risk") return "تدخل علاجي عاجل";
+  if (level === "needs_improvement") return "إعادة تدريس قصيرة وتدريب موجّه";
+  if (level === "mastered") return "تعزيز";
+  return "إثراء";
+}
+
+function studentAlertLabel(level: MasteryLevel) {
+  if (level === "at_risk") return "تدخل علاجي مباشر";
+  if (level === "needs_improvement") return "متابعة علاجية";
+  if (level === "mastered") return "تعزيز";
+  return "إثراء";
 }
 
 export function analyzeAssessmentRows(
@@ -136,6 +168,7 @@ export function analyzeAssessmentRows(
       );
 
       const average = masteryPercentFromTotals(skillScore, skillMaxScore);
+      const level = getMasteryLevel(average);
 
       return {
         skill: first.skill,
@@ -146,8 +179,10 @@ export function analyzeAssessmentRows(
         total_score: skillScore,
         total_max_score: skillMaxScore,
         score_summary: scoreSummary(skillScore, skillMaxScore),
-        at_risk_count: items.filter((row) => masteryPercent(row) < 60).length,
-        level: getMasteryLevel(average),
+        at_risk_count: items.filter((row) => masteryPercent(row) < 75).length,
+        level,
+        priority_label: skillPriorityLabel(level),
+        recommended_action: skillRecommendedAction(level),
       };
     })
     .sort((a, b) => a.average_mastery - b.average_mastery);
@@ -174,14 +209,17 @@ export function analyzeAssessmentRows(
       );
 
       const average = masteryPercentFromTotals(studentScore, studentMaxScore);
+      const level = getMasteryLevel(average);
 
-      const weakSkills = items
-        .filter((row) => masteryPercent(row) < 60)
+      const skillsNeedingFollowUp = items
+        .filter((row) => masteryPercent(row) < 75)
         .map((row) => row.skill);
 
       const masteredSkills = items
         .filter((row) => masteryPercent(row) >= 75)
         .map((row) => row.skill);
+
+      const uniqueFollowUpSkills = Array.from(new Set(skillsNeedingFollowUp));
 
       return {
         student_id: first.student_id || studentKey,
@@ -190,9 +228,16 @@ export function analyzeAssessmentRows(
         total_score: studentScore,
         total_max_score: studentMaxScore,
         score_summary: scoreSummary(studentScore, studentMaxScore),
-        weak_skills: Array.from(new Set(weakSkills)),
+        weak_skills: uniqueFollowUpSkills,
         mastered_skills: Array.from(new Set(masteredSkills)),
-        level: getMasteryLevel(average),
+        follow_up_area:
+          uniqueFollowUpSkills.length > 0
+            ? uniqueFollowUpSkills.join("، ")
+            : level === "needs_improvement"
+              ? "تحسين عام في الدرجة الكلية"
+              : "لا يوجد",
+        alert_label: studentAlertLabel(level),
+        level,
       };
     })
     .sort((a, b) => a.average_mastery - b.average_mastery);
@@ -230,31 +275,23 @@ export function analyzeAssessmentRows(
       weak_skills[0],
       students_at_risk.length
     ),
+    calculation_method: CALCULATION_METHOD,
   };
 }
 
 function buildEducationalSummary(
   overall: number,
   weakestSkill: SkillAnalysis | undefined,
-  riskCount: number
+  followUpCount: number
 ) {
   if (overall === 0) {
     return "لم تتوفر بيانات كافية لإنتاج تحليل تربوي.";
   }
 
   if (weakestSkill) {
-    const priorityLabel =
-      weakestSkill.level === "at_risk" ? "أولوية علاجية عاجلة" : "أولوية تحسين";
-
-    const actionLabel =
-      weakestSkill.level === "at_risk"
-        ? "تدخلات علاجية مركزة"
-        : "إعادة تدريس قصيرة وأنشطة إثرائية علاجية";
-
-    return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، مع بروز مهارة "${weakestSkill.skill}" بوصفها ${priorityLabel}؛ إذ بلغ متوسط إتقانها ${weakestSkill.average_mastery}%. ويوصى بتنفيذ ${actionLabel} للطلاب المحتاجين للمتابعة وعددهم ${riskCount}.`;
+    return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، مع بروز مهارة "${weakestSkill.skill}" بوصفها ${weakestSkill.priority_label}؛ إذ بلغ متوسط إتقانها ${weakestSkill.average_mastery}%. ويوصى بتنفيذ ${weakestSkill.recommended_action} للطلاب المحتاجين للمتابعة وعددهم ${followUpCount}.`;
   }
 
-  return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، ولا تظهر مهارات حرجة بدرجة عالية، مع أهمية الاستمرار في التقويم التكويني والمتابعة الدورية.`;
+  return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، ولا تظهر مهارات بحاجة إلى تدخل مباشر، مع أهمية الاستمرار في التقويم التكويني والمتابعة الدورية.`;
 }
-
 
