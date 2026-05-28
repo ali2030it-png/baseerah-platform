@@ -104,11 +104,21 @@ export function applyAssessmentMetadataToRows(
   rows: ParsedAssessmentRow[],
   metadata: AssessmentMetadata
 ): ParsedAssessmentRow[] {
-  const maxScore = Number(metadata.max_score) || 100;
+  const metadataMaxScore = Number(metadata.max_score) || 100;
 
   return rows.map((row) => {
     const currentSkill = String(row.skill || "").trim();
     const skill = currentSkill || "درجة الطالب";
+
+    const currentMaxScore = Number(row.max_score) || 0;
+
+    const isSimpleOneScoreTemplate =
+      ["درجة", "الدرجة", "درجة الطالب", "المجموع", "غير محدد"].includes(skill);
+
+    const resolvedMaxScore =
+      isSimpleOneScoreTemplate || currentMaxScore <= 0
+        ? metadataMaxScore
+        : currentMaxScore;
 
     return {
       ...row,
@@ -121,7 +131,7 @@ export function applyAssessmentMetadataToRows(
       assessment_purpose: row.assessment_purpose || "summative",
       skill,
       learning_outcome: row.learning_outcome || skill,
-      max_score: maxScore,
+      max_score: resolvedMaxScore,
     };
   });
 }

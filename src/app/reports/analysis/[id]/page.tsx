@@ -307,7 +307,7 @@ export default function PrintableAnalysisReportPage() {
                     value={Number(skill.average_mastery) || 0}
                     max={100}
                     suffix="%"
-                    danger={(Number(skill.average_mastery) || 0) < 75}
+                    danger={(Number(skill.average_mastery) || 0) < 60}
                   />
                 ))
               ) : (
@@ -324,11 +324,9 @@ export default function PrintableAnalysisReportPage() {
             {snapshot?.educational_summary ||
               `بلغ متوسط الإتقان العام ${record.overall_mastery ?? 0}%، ويعرض هذا التقرير ملخصًا تربويًا للنتائج المحفوظة.`}
           </p>
-          {snapshot?.calculation_method && (
-            <p className="mt-2 rounded-xl bg-slate-50 p-2 text-[11px] font-bold leading-6 text-slate-600">
-              {snapshot.calculation_method}
-            </p>
-          )}
+          <p className="mt-2 rounded-xl bg-slate-50 p-2 text-[11px] font-bold leading-6 text-slate-600">
+            {snapshot?.calculation_method || "تم احتساب الإتقان وفق المعادلة: مجموع الدرجات المحصلة ÷ مجموع الدرجات العظمى × 100."}
+          </p>
         </Section>
 
         <Section title="تحليل المهارات ومستويات الإتقان">
@@ -693,5 +691,8 @@ function getMasteryBarColor(percent?: number | null) {
 
   return "bg-teal-700";
 }
+
+
+
 
 
