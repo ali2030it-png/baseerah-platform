@@ -642,6 +642,3 @@ function PreviewTable({
     </div>
   );
 }
-
-
-

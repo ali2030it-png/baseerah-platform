@@ -834,4 +834,3 @@ function getMasteryBarColor(percent?: number | null) {
 
   return "bg-teal-700";
 }
-
