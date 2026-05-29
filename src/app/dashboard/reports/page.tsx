@@ -10,6 +10,7 @@ type AnalysisRecord = {
   id: string;
   analysis_type: string | null;
   subject: string | null;
+  grade_level: string | null;
   assessment_purpose: string | null;
   assessment_timing: string | null;
   students_count: number | null;
@@ -59,7 +60,7 @@ export default function TeacherReportsPage() {
     const { data, error: recordsError } = await supabase
       .from("analysis_records")
       .select(
-        "id,analysis_type,subject,assessment_purpose,assessment_timing,students_count,skills_count,overall_mastery,improvement_rate,report_title,created_at,updated_at"
+        "id,analysis_type,subject,grade_level,assessment_purpose,assessment_timing,students_count,skills_count,overall_mastery,improvement_rate,report_title,created_at,updated_at"
       )
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
@@ -87,6 +88,7 @@ export default function TeacherReportsPage() {
       [
         record.report_title,
         record.subject,
+        record.grade_level,
         getAnalysisTypeLabel(record.analysis_type),
         record.assessment_purpose,
         record.assessment_timing,
@@ -179,7 +181,7 @@ export default function TeacherReportsPage() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="ابحث باسم التقرير، المادة، أو نوع التحليل..."
+            placeholder="ابحث باسم التقرير، المادة، الصف، أو نوع التحليل..."
             className="h-14 flex-1 bg-transparent text-sm font-bold outline-none"
           />
         </div>
@@ -209,11 +211,12 @@ export default function TeacherReportsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="w-full min-w-[900px] text-right text-sm">
+            <table className="w-full min-w-[1020px] text-right text-sm">
               <thead className="bg-slate-50 text-xs font-black text-slate-500">
                 <tr>
                   <th className="p-4">عنوان التقرير</th>
                   <th className="p-4">المادة</th>
+                  <th className="p-4">الصف</th>
                   <th className="p-4">نوع التحليل</th>
                   <th className="p-4">الطلاب</th>
                   <th className="p-4">المهارات</th>
@@ -232,6 +235,10 @@ export default function TeacherReportsPage() {
 
                     <td className="p-4 font-bold">
                       {record.subject || "غير محدد"}
+                    </td>
+
+                    <td className="p-4 font-bold text-slate-700">
+                      {record.grade_level || "-"}
                     </td>
 
                     <td className="p-4">
@@ -342,8 +349,4 @@ function formatDate(value?: string | null) {
 function round(value: number) {
   return Math.round(value * 100) / 100;
 }
-
-
-
-
 

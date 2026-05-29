@@ -22,6 +22,7 @@ import {
 } from "@/lib/analysis/skill-analytics";
 
 import { saveAnalysisRecordToDatabase } from "@/lib/analysis/save-analysis-record";
+
 import {
   applyAssessmentMetadataToRows,
   assessmentTimingLabels,
@@ -31,30 +32,10 @@ import {
   subjectLabels,
   validateAssessmentMetadata,
 } from "@/lib/analysis/assessment-metadata";
+
 import { supabase } from "@/lib/supabase/client";
 
 type InputMode = "excel" | "quick" | "paste" | "image";
-
-const purposeLabels: Record<string, string> = {
-  diagnostic: "تشخيصي",
-  formative: "تكويني",
-  summative: "ختامي",
-  learning_outcome: "ناتج تعلم محدد",
-  training: "تدريب",
-  impact_pre: "قياس قبلي",
-  impact_post: "قياس بعدي",
-};
-
-const timingLabels: Record<string, string> = {
-  daily: "يومي / قصير",
-  weekly: "أسبوعي",
-  period_end: "نهاية فترة",
-  term_end: "نهاية فصل",
-  year_end: "نهاية عام",
-  national: "اختبار وطني",
-};
-
-
 
 export default function UploadPage() {
   const [mode, setMode] = useState<InputMode>("excel");
@@ -102,11 +83,16 @@ export default function UploadPage() {
     return true;
   }
 
-  async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+  async function handleExcelFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+
     if (!file) return;
 
-    if (!validateMetadataBeforeImport()) return;
+    if (!validateMetadataBeforeImport()) {
+      input.value = "";
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -117,10 +103,11 @@ export default function UploadPage() {
       const enrichedRows = applyAssessmentMetadataToRows(parsed, metadata);
       replaceRows(enrichedRows);
     } catch {
-      setError("تعذر قراءة ملف Excel. تأكد من استخدام قالب بصيرة العربي.");
+      setError("تعذر قراءة ملف Excel. تأكد من استخدام قالب بصيرة العربي أو ملف درجات منظم.");
+    } finally {
+      setLoading(false);
+      input.value = "";
     }
-
-    setLoading(false);
   }
 
   function handlePasteParse() {
@@ -205,7 +192,7 @@ export default function UploadPage() {
       });
 
       if (result.status === "created") {
-        setSaveMessage("تم حفظ التحليل بنجاح، وسيظهر في صفحة تقاريري ولوحة المدير.");
+        setSaveMessage("تم حفظ التحليل بنجاح، وسيظهر في صفحة التقارير.");
       } else if (result.status === "updated") {
         setSaveMessage("تم تحديث التحليل المحفوظ بنجاح دون إنشاء تقرير مكرر.");
       } else {
@@ -222,16 +209,41 @@ export default function UploadPage() {
     <main className="space-y-6">
       <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-black text-teal-700">مركز إدخال النتائج</p>
+
         <h1 className="mt-2 text-3xl font-black">إدخال نتائج الطلاب</h1>
+
         <p className="mt-2 max-w-3xl text-sm font-bold leading-7 text-slate-600">
-          عرّف الاختبار أولًا، ثم ارفع ملف Excel أو أدخل النتائج يدويًا.
+          عرّف الاختبار أولًا، ثم ارفع ملف Excel أو أدخل النتائج يدويًا أو الصق جدول الدرجات.
         </p>
 
         <div className="mt-6 grid gap-3 md:grid-cols-4">
-          <ModeButton active={mode === "excel"} onClick={() => setMode("excel")} icon={<FileSpreadsheet size={18} />} title="رفع Excel" />
-          <ModeButton active={mode === "quick"} onClick={() => setMode("quick")} icon={<Keyboard size={18} />} title="إدخال سريع" />
-          <ModeButton active={mode === "paste"} onClick={() => setMode("paste")} icon={<ClipboardPaste size={18} />} title="لصق جدول" />
-          <ModeButton active={mode === "image"} onClick={() => setMode("image")} icon={<Camera size={18} />} title="تصوير النتيجة" />
+          <ModeButton
+            active={mode === "excel"}
+            onClick={() => setMode("excel")}
+            icon={<FileSpreadsheet size={18} />}
+            title="رفع Excel"
+          />
+
+          <ModeButton
+            active={mode === "quick"}
+            onClick={() => setMode("quick")}
+            icon={<Keyboard size={18} />}
+            title="إدخال سريع"
+          />
+
+          <ModeButton
+            active={mode === "paste"}
+            onClick={() => setMode("paste")}
+            icon={<ClipboardPaste size={18} />}
+            title="لصق جدول"
+          />
+
+          <ModeButton
+            active={mode === "image"}
+            onClick={() => setMode("image")}
+            icon={<Camera size={18} />}
+            title="تصوير النتيجة"
+          />
         </div>
       </section>
 
@@ -241,9 +253,11 @@ export default function UploadPage() {
             <p className="text-sm font-black text-teal-700">
               بيانات الاختبار قبل رفع الملف
             </p>
+
             <h2 className="mt-2 text-2xl font-black text-slate-950">
               عرّف الاختبار أولًا
             </h2>
+
             <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
               هذه البيانات ستظهر في التحليل والتقرير، وتعالج نقص البيانات في ملفات Excel.
             </p>
@@ -266,7 +280,7 @@ export default function UploadPage() {
           />
 
           <Select
-            label="الصف / المسار"
+            label="الصف"
             value={metadata.grade_level}
             options={gradeLevelLabels}
             onChange={(value) => setMetadata({ ...metadata, grade_level: value })}
@@ -302,21 +316,27 @@ export default function UploadPage() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-teal-100 bg-teal-50 p-4 text-sm font-bold leading-7 text-teal-800">
-          القالب العربي البسيط المقترح: رقم الطالب، اسم الطالب، درجة الطالب.
+          المسار المعتمد حاليًا: رفع ملفات Excel فقط، مع حفظ بيانات التحليل والتقرير دون تخزين ملف الدرجات الأصلي.
         </div>
       </section>
 
       {mode === "excel" && (
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black">رفع ملف الدرجات</h2>
+
           <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
-            استخدم قالب بصيرة العربي البسيط، أو ملفًا يحتوي على أسماء الطلاب ودرجاتهم.
+            استخدم قالب بصيرة العربي البسيط، أو ملف Excel يحتوي على أسماء الطلاب ودرجاتهم.
           </p>
 
           <label className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white hover:bg-teal-800">
             <UploadCloud size={18} />
             رفع ملف Excel
-            <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFile} />
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleExcelFile}
+            />
           </label>
         </section>
       )}
@@ -326,12 +346,29 @@ export default function UploadPage() {
           <h2 className="text-xl font-black">إدخال سريع من الجوال</h2>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <Input label="اسم الطالب" value={quick.student_name} onChange={(v) => setQuick({ ...quick, student_name: v })} />
-            <Input label="رقم الطالب" value={quick.student_id} onChange={(v) => setQuick({ ...quick, student_id: v })} />
-            <NumberInput label="الدرجة" value={quick.score} onChange={(v) => setQuick({ ...quick, score: v })} />
+            <Input
+              label="اسم الطالب"
+              value={quick.student_name}
+              onChange={(value) => setQuick({ ...quick, student_name: value })}
+            />
+
+            <Input
+              label="رقم الطالب"
+              value={quick.student_id}
+              onChange={(value) => setQuick({ ...quick, student_id: value })}
+            />
+
+            <NumberInput
+              label="الدرجة"
+              value={quick.score}
+              onChange={(value) => setQuick({ ...quick, score: value })}
+            />
           </div>
 
-          <button onClick={addQuickRow} className="mt-5 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white">
+          <button
+            onClick={addQuickRow}
+            className="mt-5 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white"
+          >
             إضافة النتيجة
           </button>
         </section>
@@ -340,6 +377,7 @@ export default function UploadPage() {
       {mode === "paste" && (
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black">لصق جدول من Excel</h2>
+
           <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
             الصق جدولًا يحتوي على: رقم الطالب، اسم الطالب، درجة الطالب.
           </p>
@@ -348,10 +386,13 @@ export default function UploadPage() {
             value={pasteText}
             onChange={(event) => setPasteText(event.target.value)}
             className="mt-4 min-h-48 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold outline-none focus:border-teal-600"
-            placeholder="رقم الطالباسم الطالبدرجة الطالب"
+            placeholder={"رقم الطالب\tاسم الطالب\tدرجة الطالب"}
           />
 
-          <button onClick={handlePasteParse} className="mt-4 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white">
+          <button
+            onClick={handlePasteParse}
+            className="mt-4 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white"
+          >
             تحليل النص الملصق
           </button>
         </section>
@@ -360,18 +401,22 @@ export default function UploadPage() {
       {mode === "image" && (
         <section className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
           <Camera className="mx-auto text-teal-700" size={42} />
+
           <h2 className="mt-4 text-2xl font-black">تصوير النتيجة</h2>
+
           <p className="mt-2 text-sm font-bold leading-7 text-slate-600">
-            هذه الميزة ستُفعّل لاحقًا بعد استقرار قالب الإدخال والتحليل.
+            هذه الميزة ستُفعّل لاحقًا بعد استقرار قوالب الإدخال والتحليل.
           </p>
         </section>
       )}
 
       {loading && <Notice text="جارٍ قراءة الملف..." />}
       {error && <Notice text={error} danger />}
+
       {saveMessage && (
         <section className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-5 text-sm font-black text-emerald-700">
           <p>{saveMessage}</p>
+
           <a
             href="/dashboard/reports"
             className="mt-4 inline-flex rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white"
@@ -393,10 +438,17 @@ export default function UploadPage() {
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-black text-teal-700">التحليل التربوي</p>
+                <p className="text-sm font-black text-teal-700">
+                  معاينة البيانات المستخرجة
+                </p>
+
                 <h2 className="mt-2 text-2xl font-black">
-                  من البيانات إلى قرار تربوي
+                  راجع الطلاب والدرجات قبل الحفظ
                 </h2>
+
+                <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
+                  لا تحفظ التحليل حتى تتأكد من صحة عدد الطلاب والأسماء والدرجات.
+                </p>
               </div>
 
               <button
@@ -410,13 +462,15 @@ export default function UploadPage() {
               </button>
             </div>
 
-            <p className="mt-3 text-sm font-bold leading-7 text-slate-600">
+            <PreviewTable rows={rows.slice(0, 12)} totalRows={rows.length} />
+
+            <p className="mt-5 text-sm font-bold leading-7 text-slate-600">
               {analysis.educational_summary}
             </p>
 
             <div className="mt-5 grid gap-4 md:grid-cols-3">
-              <Stat title="المهارات الحرجة" value={analysis.weak_skills.length} />
-              <Stat title="الطلاب المتعثرون" value={analysis.students_at_risk.length} />
+              <Stat title="مجالات المتابعة" value={analysis.weak_skills.length} />
+              <Stat title="طلاب بحاجة متابعة" value={analysis.students_at_risk.length} />
               <Stat title="صفوف البيانات الصحيحة" value={analysis.total_rows} />
             </div>
           </section>
@@ -549,7 +603,44 @@ function Stat({ title, value }: { title: string; value: string | number }) {
   );
 }
 
+function PreviewTable({
+  rows,
+  totalRows,
+}: {
+  rows: ParsedAssessmentRow[];
+  totalRows: number;
+}) {
+  return (
+    <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+      <table className="w-full text-right text-xs">
+        <thead className="bg-slate-50 text-slate-500">
+          <tr>
+            <th className="border-l border-slate-200 p-3">رقم الطالب</th>
+            <th className="border-l border-slate-200 p-3">اسم الطالب</th>
+            <th className="border-l border-slate-200 p-3">الدرجة</th>
+            <th className="p-3">الدرجة العظمى</th>
+          </tr>
+        </thead>
 
+        <tbody className="divide-y divide-slate-100">
+          {rows.map((row, index) => (
+            <tr key={`${row.student_id}-${index}`} className="font-bold">
+              <td className="border-l border-slate-100 p-3">{row.student_id || "-"}</td>
+              <td className="border-l border-slate-100 p-3">{row.student_name}</td>
+              <td className="border-l border-slate-100 p-3">{row.score}</td>
+              <td className="p-3">{row.max_score}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
+      {totalRows > rows.length && (
+        <p className="border-t border-slate-100 bg-slate-50 p-3 text-xs font-bold text-slate-500">
+          يتم عرض أول {rows.length} طالبًا فقط من أصل {totalRows} طالبًا.
+        </p>
+      )}
+    </div>
+  );
+}
 
 
