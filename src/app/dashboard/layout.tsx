@@ -9,11 +9,11 @@ export default function DashboardLayout({
 }) {
   return (
     <>
-      <BasirahShell>
-        {children}
-      </BasirahShell>
+      <BasirahShell>{children}</BasirahShell>
 
-      <AuthLogoutButton />
+      <div className="fixed bottom-24 left-5 z-[60] print:hidden">
+        <AuthLogoutButton />
+      </div>
     </>
   );
 }
