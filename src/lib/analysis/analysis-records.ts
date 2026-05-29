@@ -1,7 +1,7 @@
 import { ParsedAssessmentRow } from "@/lib/analysis/excel-parser";
 import type { AssessmentMetadata } from "@/lib/analysis/assessment-metadata";
 
-const ANALYSIS_ALGORITHM_VERSION = "official-report-v4";
+const ANALYSIS_ALGORITHM_VERSION = "official-report-v6-table-order";
 
 type BuildAnalysisRecordPayloadInput = {
   userId: string;
@@ -229,6 +229,8 @@ function getAnalysisTypeLabel(type?: string | null) {
 
   return labels[type || ""] || "ختامي";
 }
+
+
 
 
 

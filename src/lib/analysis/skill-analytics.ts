@@ -239,8 +239,7 @@ export function analyzeAssessmentRows(
         alert_label: studentAlertLabel(level),
         level,
       };
-    })
-    .sort((a, b) => a.average_mastery - b.average_mastery);
+    });
 
   const weak_skills = skill_analysis.filter(
     (skill) =>
@@ -251,10 +250,12 @@ export function analyzeAssessmentRows(
     .sort((a, b) => b.average_mastery - a.average_mastery)
     .slice(0, 5);
 
-  const students_at_risk = student_analysis.filter(
-    (student) =>
-      student.level === "at_risk" || student.level === "needs_improvement"
-  );
+  const students_at_risk = student_analysis
+    .filter(
+      (student) =>
+        student.level === "at_risk" || student.level === "needs_improvement"
+    )
+    .sort((a, b) => a.average_mastery - b.average_mastery);
 
   return {
     total_rows: validRows.length,
@@ -294,4 +295,5 @@ function buildEducationalSummary(
 
   return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، ولا تظهر مهارات بحاجة إلى تدخل مباشر، مع أهمية الاستمرار في التقويم التكويني والمتابعة الدورية.`;
 }
+
 

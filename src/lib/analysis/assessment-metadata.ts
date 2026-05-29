@@ -47,7 +47,7 @@ export const subjectLabels: Record<string, string> = {
 };
 
 export const gradeLevelLabels: Record<string, string> = {
-  "": "اختر الصف / المسار",
+  "": "اختر الصف",
   "الأول الابتدائي": "الأول الابتدائي",
   "الثاني الابتدائي": "الثاني الابتدائي",
   "الثالث الابتدائي": "الثالث الابتدائي",
@@ -135,3 +135,4 @@ export function applyAssessmentMetadataToRows(
     };
   });
 }
+
