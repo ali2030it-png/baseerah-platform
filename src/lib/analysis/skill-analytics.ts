@@ -1,10 +1,12 @@
 import { ParsedAssessmentRow } from "@/lib/analysis/excel-parser";
+import {
+  classifyMastery,
+  getMasteryActionLabel,
+  getMasteryLabel,
+  type MasteryLevel,
+} from "@/lib/analysis/recommendation-engine";
 
-export type MasteryLevel =
-  | "excellent"
-  | "mastered"
-  | "needs_improvement"
-  | "at_risk";
+export type { MasteryLevel };
 
 export type SkillAnalysis = {
   skill: string;
@@ -86,38 +88,43 @@ function masteryPercent(row: ParsedAssessmentRow) {
 }
 
 export function getMasteryLevel(percent: number): MasteryLevel {
-  if (percent >= 90) return "excellent";
-  if (percent >= 75) return "mastered";
-  if (percent >= 60) return "needs_improvement";
-  return "at_risk";
+  return classifyMastery(percent).level;
 }
 
 export function masteryLabel(level: MasteryLevel) {
-  if (level === "excellent") return "إتقان مرتفع";
-  if (level === "mastered") return "متقن";
-  if (level === "needs_improvement") return "بحاجة إلى تحسين";
-  return "متعثر";
+  return getLevelLabel(level);
+}
+
+function getLevelLabel(level: MasteryLevel) {
+  if (level === "very_high") return "إتقان مرتفع جدًا";
+  if (level === "high") return "إتقان مرتفع";
+  if (level === "medium_follow_up") return "إتقان متوسط يحتاج متابعة";
+  if (level === "low_support") return "إتقان منخفض يحتاج دعمًا";
+  return "إتقان متدنٍ يحتاج تدخلًا علاجيًا";
 }
 
 function skillPriorityLabel(level: MasteryLevel) {
-  if (level === "at_risk") return "مهارة حرجة";
-  if (level === "needs_improvement") return "أولوية تحسين";
-  if (level === "mastered") return "مهارة متقنة";
+  if (level === "very_low_intervention") return "مهارة حرجة";
+  if (level === "low_support") return "أولوية دعم";
+  if (level === "medium_follow_up") return "أولوية متابعة";
+  if (level === "high") return "مهارة متقنة";
   return "نقطة قوة";
 }
 
 function skillRecommendedAction(level: MasteryLevel) {
-  if (level === "at_risk") return "تدخل علاجي عاجل";
-  if (level === "needs_improvement") return "إعادة تدريس قصيرة وتدريب موجّه";
-  if (level === "mastered") return "تعزيز";
+  if (level === "very_low_intervention") return "تدخل علاجي مركز";
+  if (level === "low_support") return "إعادة تدريس قصيرة وتدريب موجّه";
+  if (level === "medium_follow_up") return "متابعة تعليمية وتقويم تكويني";
+  if (level === "high") return "تعزيز";
   return "إثراء";
 }
 
 function studentAlertLabel(level: MasteryLevel) {
-  if (level === "at_risk") return "تدخل علاجي مباشر";
-  if (level === "needs_improvement") return "متابعة علاجية";
-  if (level === "mastered") return "تعزيز";
-  return "إثراء";
+  if (level === "very_low_intervention") return "تدخل علاجي";
+  if (level === "low_support") return "دعم تعليمي";
+  if (level === "medium_follow_up") return "متابعة تعليمية";
+  if (level === "high") return "تعزيز وتحسين";
+  return "إثراء ومتابعة";
 }
 
 export function analyzeAssessmentRows(
@@ -179,7 +186,7 @@ export function analyzeAssessmentRows(
         total_score: skillScore,
         total_max_score: skillMaxScore,
         score_summary: scoreSummary(skillScore, skillMaxScore),
-        at_risk_count: items.filter((row) => masteryPercent(row) < 75).length,
+        at_risk_count: items.filter((row) => masteryPercent(row) < 70).length,
         level,
         priority_label: skillPriorityLabel(level),
         recommended_action: skillRecommendedAction(level),
@@ -196,8 +203,8 @@ export function analyzeAssessmentRows(
     studentMap.set(key, current);
   }
 
-  const student_analysis: StudentAnalysis[] = Array.from(studentMap.entries())
-    .map(([studentKey, items]) => {
+  const student_analysis: StudentAnalysis[] = Array.from(studentMap.entries()).map(
+    ([studentKey, items]) => {
       const first = items[0];
 
       const studentScore = cleanNumber(
@@ -212,11 +219,11 @@ export function analyzeAssessmentRows(
       const level = getMasteryLevel(average);
 
       const skillsNeedingFollowUp = items
-        .filter((row) => masteryPercent(row) < 75)
+        .filter((row) => masteryPercent(row) < 80)
         .map((row) => row.skill);
 
       const masteredSkills = items
-        .filter((row) => masteryPercent(row) >= 75)
+        .filter((row) => masteryPercent(row) >= 80)
         .map((row) => row.skill);
 
       const uniqueFollowUpSkills = Array.from(new Set(skillsNeedingFollowUp));
@@ -233,17 +240,17 @@ export function analyzeAssessmentRows(
         follow_up_area:
           uniqueFollowUpSkills.length > 0
             ? uniqueFollowUpSkills.join("، ")
-            : level === "needs_improvement"
-              ? "تحسين عام في الدرجة الكلية"
+            : level === "medium_follow_up" || level === "low_support"
+              ? "متابعة عامة في الدرجة الكلية"
               : "لا يوجد",
         alert_label: studentAlertLabel(level),
         level,
       };
-    });
+    }
+  );
 
   const weak_skills = skill_analysis.filter(
-    (skill) =>
-      skill.level === "at_risk" || skill.level === "needs_improvement"
+    (skill) => skill.level !== "very_high" && skill.level !== "high"
   );
 
   const top_skills = [...skill_analysis]
@@ -251,10 +258,7 @@ export function analyzeAssessmentRows(
     .slice(0, 5);
 
   const students_at_risk = student_analysis
-    .filter(
-      (student) =>
-        student.level === "at_risk" || student.level === "needs_improvement"
-    )
+    .filter((student) => student.level !== "very_high" && student.level !== "high")
     .sort((a, b) => a.average_mastery - b.average_mastery);
 
   return {
@@ -289,11 +293,11 @@ function buildEducationalSummary(
     return "لم تتوفر بيانات كافية لإنتاج تحليل تربوي.";
   }
 
+  const classification = classifyMastery(overall);
+
   if (weakestSkill) {
-    return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، مع بروز مهارة "${weakestSkill.skill}" بوصفها ${weakestSkill.priority_label}؛ إذ بلغ متوسط إتقانها ${weakestSkill.average_mastery}%. ويوصى بتنفيذ ${weakestSkill.recommended_action} للطلاب المحتاجين للمتابعة وعددهم ${followUpCount}.`;
+    return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، ويصنف في مستوى "${classification.label}"، مع بروز "${weakestSkill.skill}" بوصفها ${weakestSkill.priority_label}؛ إذ بلغ متوسط إتقانها ${weakestSkill.average_mastery}%. ويوصى بتنفيذ ${weakestSkill.recommended_action} للطلاب المحتاجين للمتابعة وعددهم ${followUpCount}.`;
   }
 
-  return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، ولا تظهر مهارات بحاجة إلى تدخل مباشر، مع أهمية الاستمرار في التقويم التكويني والمتابعة الدورية.`;
+  return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overall}%، ويصنف في مستوى "${classification.label}"، ولا تظهر مهارات بحاجة إلى تدخل مباشر، مع أهمية الاستمرار في التقويم التكويني والمتابعة الدورية.`;
 }
-
-

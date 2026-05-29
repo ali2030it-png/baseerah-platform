@@ -221,14 +221,14 @@ export default function UploadPage() {
             active={mode === "excel"}
             onClick={() => setMode("excel")}
             icon={<FileSpreadsheet size={18} />}
-            title="رفع Excel"
+            title="رفع ملف Excel"
           />
 
           <ModeButton
             active={mode === "quick"}
             onClick={() => setMode("quick")}
             icon={<Keyboard size={18} />}
-            title="إدخال سريع"
+            title="إدخال يدوي"
           />
 
           <ModeButton
@@ -316,7 +316,7 @@ export default function UploadPage() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-teal-100 bg-teal-50 p-4 text-sm font-bold leading-7 text-teal-800">
-          المسار المعتمد حاليًا: رفع ملفات Excel فقط، مع حفظ بيانات التحليل والتقرير دون تخزين ملف الدرجات الأصلي.
+          المسار المعتمد حاليًا: رفع ملف Excel أو الإدخال اليدوي، مع حفظ بيانات التحليل والتقرير دون تخزين ملف الدرجات الأصلي.
         </div>
       </section>
 
@@ -343,7 +343,7 @@ export default function UploadPage() {
 
       {mode === "quick" && (
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black">إدخال سريع من الجوال</h2>
+          <h2 className="text-xl font-black">إدخال يدوي للدرجات</h2>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <Input
@@ -432,7 +432,7 @@ export default function UploadPage() {
             <Stat title="عدد الطلاب" value={analysis.total_students} />
             <Stat title="عدد المهارات" value={analysis.total_skills} />
             <Stat title="متوسط الإتقان" value={`${analysis.overall_mastery}%`} />
-            <Stat title="تصنيف الأداء" value={masteryLabel(analysis.level)} />
+            <Stat title="مستوى الإتقان" value={masteryLabel(analysis.level)} />
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -642,5 +642,6 @@ function PreviewTable({
     </div>
   );
 }
+
 
 

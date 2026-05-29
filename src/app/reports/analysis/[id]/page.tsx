@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowRight, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import {
+  buildEducationalRecommendation,
+  METHODOLOGY_NOTE,
+} from "@/lib/analysis/recommendation-engine";
 
 type AnalysisRecord = {
   id: string;
@@ -50,10 +54,16 @@ const analysisTypeLabels: Record<string, string> = {
 };
 
 const levelLabels: Record<string, string> = {
-  excellent: "إتقان مرتفع",
-  mastered: "متقن",
-  needs_improvement: "بحاجة إلى تحسين",
-  at_risk: "متعثر",
+  very_high: "إتقان مرتفع جدًا",
+  high: "إتقان مرتفع",
+  medium_follow_up: "إتقان متوسط يحتاج متابعة",
+  low_support: "إتقان منخفض يحتاج دعمًا",
+  very_low_intervention: "إتقان متدنٍ يحتاج تدخلًا علاجيًا",
+
+  excellent: "إتقان مرتفع جدًا",
+  mastered: "إتقان مرتفع",
+  needs_improvement: "إتقان منخفض يحتاج دعمًا",
+  at_risk: "إتقان متدنٍ يحتاج تدخلًا علاجيًا",
 };
 
 const CALCULATION_METHOD =
@@ -163,8 +173,30 @@ export default function PrintableAnalysisReportPage() {
     settings?.preparer_name || profile?.full_name || "........................";
 
   const teacherLabel = getTeacherLabel(profile?.role);
-  const followUpCount = studentStats.needsImprovement + studentStats.atRisk;
-  const scoreHeader = getStudentScoreHeader(studentAnalysis);
+  const followUpCount = studentAnalysis.filter((student: any) => {
+    const value = Number(student.average_mastery) || 0;
+    return value < 80;
+  }).length;
+
+  const educationalRecommendation = buildEducationalRecommendation({
+    overallMastery: Number(record.overall_mastery) || 0,
+    studentsBelow60: studentAnalysis.filter((student: any) => (Number(student.average_mastery) || 0) < 60).length,
+    studentsBetween60And70: studentAnalysis.filter((student: any) => {
+      const value = Number(student.average_mastery) || 0;
+      return value >= 60 && value < 70;
+    }).length,
+    studentsBetween70And80: studentAnalysis.filter((student: any) => {
+      const value = Number(student.average_mastery) || 0;
+      return value >= 70 && value < 80;
+    }).length,
+    weakSkillsCount: weakSkills.length,
+    weakestSkills: weakSkills
+      .slice(0, 5)
+      .map((skill: any) => String(skill.skill || ""))
+      .filter(Boolean),
+  });
+
+  const scoreHeader = "الدرجة";
 
   return (
     <main dir="rtl" className="min-h-screen bg-slate-100 px-4 py-5 print:bg-white print:p-0">
@@ -275,7 +307,7 @@ export default function PrintableAnalysisReportPage() {
         <Section title="تحليل المهارات ومستويات الإتقان">
           <CompactTable
             compact
-            headers={["المهارة", "ناتج التعلم", "الإتقان", "المستوى", "طلاب بحاجة متابعة", "التنبيه"]}
+            headers={["المهارة", "ناتج التعلم", "الإتقان", "مستوى الإتقان", "طلاب بحاجة متابعة", "الإجراء المقترح"]}
             emptyText="لا توجد تفاصيل مهارات محفوظة لهذا التقرير."
             rows={skillAnalysis.map((skill: any) => [
               skill.skill || "-",
@@ -291,7 +323,7 @@ export default function PrintableAnalysisReportPage() {
         <Section title="نتائج الطلاب ومستوياتهم" printBreakBefore>
           <CompactTable
             dense
-            headers={["اسم الطالب", scoreHeader, "الإتقان", "المستوى", "مجال المتابعة", "التنبيه"]}
+            headers={["اسم الطالب", scoreHeader, "الإتقان", "مستوى الإتقان", "مجال المتابعة", "الإجراء المقترح"]}
             emptyText="لا توجد تفاصيل طلاب محفوظة لهذا التقرير."
             rows={studentAnalysis.map((student: any) => [
               formatStudentDisplayName(student.student_name),
@@ -327,13 +359,34 @@ export default function PrintableAnalysisReportPage() {
           />
         </Section>
 
-        <Section title="التوصيات العلاجية" printBreakBefore avoidBreak>
-          <ol className="list-decimal space-y-1.5 pr-5 text-[11px] font-bold leading-6 text-slate-700">
-            <li>إعادة تدريس المهارات ذات الإتقان المنخفض باستخدام أمثلة متدرجة وتغذية راجعة فورية.</li>
-            <li>تخصيص أنشطة قصيرة للطلاب المحتاجين للمتابعة مرتبطة مباشرة بمجالات التحسين.</li>
-            <li>تنفيذ تقويم تكويني قصير بعد التدخل العلاجي لقياس التحسن.</li>
-            <li>توثيق نتائج المتابعة ومقارنتها بالتحليل الحالي عند إعداد تقرير قياس الأثر.</li>
-          </ol>
+        <Section title={educationalRecommendation.title} printBreakBefore avoidBreak>
+          <div className="space-y-2 text-[11px] font-bold leading-6 text-slate-700">
+            <p>{educationalRecommendation.summary}</p>
+
+            {educationalRecommendation.focusStudentsNote && (
+              <p className="border border-amber-200 bg-amber-50 p-2 text-amber-800">
+                {educationalRecommendation.focusStudentsNote}
+              </p>
+            )}
+
+            {educationalRecommendation.focusSkillsNote && (
+              <p className="border border-teal-100 bg-teal-50 p-2 text-teal-800">
+                {educationalRecommendation.focusSkillsNote}
+              </p>
+            )}
+
+            <ol className="list-decimal space-y-1.5 pr-5">
+              {educationalRecommendation.suggestedActions.map((action) => (
+                <li key={action}>{action}</li>
+              ))}
+            </ol>
+          </div>
+        </Section>
+
+        <Section title="ملاحظة منهجية" avoidBreak>
+          <p className="text-[10.5px] font-bold leading-6 text-slate-600">
+            {METHODOLOGY_NOTE}
+          </p>
         </Section>
 
         <ReportFooter
@@ -387,7 +440,7 @@ function ReportInfoTable({ record }: { record: AnalysisRecord }) {
         <tbody>
           <tr className="bg-slate-100 font-extrabold text-slate-600">
             <td className="border border-slate-300 px-2 py-1.5">المادة</td>
-            <td className="border border-slate-300 px-2 py-1.5">الصف / المسار</td>
+            <td className="border border-slate-300 px-2 py-1.5">الصف</td>
             <td className="border border-slate-300 px-2 py-1.5">الشعبة</td>
             <td className="border border-slate-300 px-2 py-1.5">الفصل الدراسي</td>
             <td className="border border-slate-300 px-2 py-1.5">نوع الاختبار</td>
@@ -768,16 +821,8 @@ function formatStudentScoreOnly(scoreSummary?: string | null) {
   return score || "-";
 }
 
-function getStudentScoreHeader(students: any[]) {
-  const firstScoreSummary = students
-    .map((student) => String(student?.score_summary || ""))
-    .find((summary) => summary.includes("/"));
-
-  if (!firstScoreSummary) return "الدرجة";
-
-  const maxScore = firstScoreSummary.split("/")[1]?.trim();
-
-  return maxScore ? `الدرجة من ${maxScore}` : "الدرجة";
+function getStudentScoreHeader(_students: any[]) {
+  return "الدرجة";
 }
 
 function getMasteryBarColor(percent?: number | null) {
@@ -789,3 +834,4 @@ function getMasteryBarColor(percent?: number | null) {
 
   return "bg-teal-700";
 }
+

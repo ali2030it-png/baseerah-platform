@@ -3,14 +3,14 @@ import { FileSpreadsheet, FileText, Target, TrendingUp } from "lucide-react";
 
 const cards = [
   {
-    title: "رفع نتائج الطلاب",
-    desc: "ارفع ملف Excel أو CSV، ثم دع بصيرة تحول الدرجات إلى مؤشرات إتقان وتشخيص مهاري واضح.",
+    title: "إدخال نتائج الطلاب",
+    desc: "أدخل النتائج عبر ملف Excel أو الإدخال اليدوي، ثم دع بصيرة تحول الدرجات إلى مؤشرات إتقان وتشخيص تربوي واضح.",
     href: "/dashboard/analysis/upload",
     icon: FileSpreadsheet,
   },
   {
     title: "التقارير التربوية",
-    desc: "تقارير رسمية مرتبة تتضمن مؤشرات الإتقان، الرسوم البيانية، النتائج التفصيلية، والتوصيات العلاجية.",
+    desc: "تقارير تحليلية مرتبة تتضمن مؤشرات الإتقان، الرسوم البيانية، النتائج التفصيلية، والتوصيات التربوية.",
     href: "/dashboard/reports",
     icon: FileText,
   },
@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
         <p className="mt-3 max-w-4xl text-sm font-bold leading-7 text-slate-600">
           منصة تربوية ذكية تساعد المعلمين والمرشدين على تحويل نتائج الاختبارات
-          والتدريب إلى مؤشرات إتقان، وتشخيص مهاري، وتقارير رسمية، وتوصيات عملية
+          والتدريب إلى مؤشرات إتقان، وتشخيص مهاري، وتقارير رسمية، وتوصيات تربوية
           تدعم تحسين تعلم الطلاب.
         </p>
 
@@ -44,7 +44,7 @@ export default function DashboardPage() {
             className="inline-flex items-center gap-2 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white hover:bg-teal-800"
           >
             <FileSpreadsheet size={18} />
-            ابدأ برفع النتائج
+            ابدأ بإدخال النتائج
           </Link>
         </div>
       </section>
@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
         <p className="mt-3 max-w-4xl text-sm font-bold leading-7 text-slate-300">
           لا تكتفي بصيرة بعرض الأرقام، بل تساعد على تفسير مستوى الإتقان، وتحديد
-          مجالات التحسين، وترتيب أولويات المتابعة، وبناء تدخلات علاجية قابلة
+          مجالات التحسين، وترتيب أولويات المتابعة، وبناء إجراءات دعم ومتابعة قابلة
           للقياس والمتابعة.
         </p>
 
@@ -90,3 +90,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
