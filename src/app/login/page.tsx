@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BarChart3, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BarChart3, ShieldCheck } from "lucide-react";
 
 import { supabase } from "@/lib/supabase/client";
 
@@ -137,9 +137,12 @@ export default function LoginPage() {
         </section>
 
         <section className="order-1 overflow-hidden rounded-[2.5rem] border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-slate-100 p-8 lg:order-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-teal-100 bg-white px-4 py-2 text-sm font-black text-teal-700">
-            <Sparkles size={16} />
-            منصة بصيرة
+          <div className="mb-8">
+            <img
+              src="/baseerah-header-logo.png"
+              alt="بصيرة"
+              className="h-24 w-auto object-contain"
+            />
           </div>
 
           <h2 className="mt-6 max-w-2xl text-5xl font-black leading-tight text-slate-950">
