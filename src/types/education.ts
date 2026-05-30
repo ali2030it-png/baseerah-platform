@@ -20,6 +20,8 @@ export type ProfileStatus =
 
 export type ProfileRole =
   | "super_admin"
+  | "school_principal_male"
+  | "school_principal_female"
   | "teacher_male"
   | "teacher_female"
   | "counselor_male"

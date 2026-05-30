@@ -821,9 +821,12 @@ function getStudentAlert(level?: string) {
 }
 
 function getTeacherLabel(role?: string | null) {
+  if (role === "school_principal_male") return "اسم مدير المدرسة";
+  if (role === "school_principal_female") return "اسم مديرة المدرسة";
   if (role === "teacher_female") return "اسم المعلمة";
-  if (role === "counselor_male") return "اسم المرشد";
-  if (role === "counselor_female") return "اسم المرشدة";
+  if (role === "teacher_male") return "اسم المعلم";
+  if (role === "counselor_male") return "اسم الموجه الطلابي";
+  if (role === "counselor_female") return "اسم الموجهة الطلابية";
   return "اسم المعلم";
 }
 

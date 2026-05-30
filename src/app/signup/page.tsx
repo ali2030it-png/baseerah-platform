@@ -16,10 +16,12 @@ type SignupForm = {
 };
 
 const roleOptions = [
+  { value: "school_principal_male", label: "مدير مدرسة" },
+  { value: "school_principal_female", label: "مديرة مدرسة" },
   { value: "teacher_male", label: "معلم" },
   { value: "teacher_female", label: "معلمة" },
-  { value: "counselor_male", label: "مرشد طلابي" },
-  { value: "counselor_female", label: "مرشدة طلابية" },
+  { value: "counselor_male", label: "موجه طلابي" },
+  { value: "counselor_female", label: "موجهة طلابية" },
 ];
 
 export default function SignupPage() {
@@ -30,7 +32,7 @@ export default function SignupPage() {
     school_name: "",
     region: "",
     mobile: "",
-    role: "teacher_male",
+    role: "school_principal_male",
     email: "",
     password: "",
   });
