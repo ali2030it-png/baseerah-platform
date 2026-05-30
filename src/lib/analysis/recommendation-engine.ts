@@ -210,20 +210,20 @@ function buildStudentsNote(
   const parts: string[] = [];
 
   if (studentsBelow60 > 0) {
-    parts.push(`${studentsBelow60} طالب/طلاب في مستوى إتقان متدنٍ يحتاج تدخلًا علاجيًا`);
+    parts.push(`عدد الطلاب في مستوى إتقان متدنٍ يحتاج تدخلًا علاجيًا: ${studentsBelow60}`);
   }
 
   if (studentsBetween60And70 > 0) {
-    parts.push(`${studentsBetween60And70} طالب/طلاب في مستوى إتقان منخفض يحتاج دعمًا`);
+    parts.push(`عدد الطلاب في مستوى إتقان منخفض يحتاج دعمًا: ${studentsBetween60And70}`);
   }
 
   if (studentsBetween70And80 > 0) {
-    parts.push(`${studentsBetween70And80} طالب/طلاب في مستوى إتقان متوسط يحتاج متابعة`);
+    parts.push(`عدد الطلاب في مستوى إتقان متوسط يحتاج متابعة: ${studentsBetween70And80}`);
   }
 
   if (parts.length === 0) return undefined;
 
-  return `توجد حاجة إلى متابعة تعليمية موجهة؛ حيث ظهر ${parts.join("، ")}.`;
+  return `توجد حاجة إلى متابعة تعليمية موجهة؛ ${parts.join("، ")}.`;
 }
 
 function buildSkillsNote(

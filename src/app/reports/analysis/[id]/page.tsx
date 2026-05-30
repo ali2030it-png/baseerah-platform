@@ -209,6 +209,10 @@ export default function PrintableAnalysisReportPage() {
 
   const scoreHeader = "الدرجة";
 
+  const hasDetailedSkillAnalysis = skillAnalysis.some(
+    (skill: any) => !isTotalScoreSkill(skill?.skill)
+  );
+
   return (
     <main dir="rtl" className="min-h-screen bg-slate-100 px-4 py-5 print:bg-white print:p-0">
       <div className="mx-auto mb-3 flex max-w-5xl items-center justify-between print:hidden">
@@ -288,7 +292,7 @@ export default function PrintableAnalysisReportPage() {
                 skillAnalysis.slice(0, 6).map((skill: any, index: number) => (
                   <ChartBar
                     key={`${skill.skill}-${index}`}
-                    label={skill.skill || "مهارة"}
+                    label={formatSkillDisplayLabel(skill.skill)}
                     value={Number(skill.average_mastery) || 0}
                     max={100}
                     suffix="%"
@@ -315,14 +319,14 @@ export default function PrintableAnalysisReportPage() {
           </p>
         </Section>
 
-        <Section title="تحليل المهارات ومستويات الإتقان">
+        <Section title={hasDetailedSkillAnalysis ? "تحليل المهارات ومستويات الإتقان" : "تحليل الدرجة الكلية ومستوى الإتقان"}>
           <CompactTable
             compact
-            headers={["المهارة", "ناتج التعلم", "الإتقان", "مستوى الإتقان", "طلاب بحاجة متابعة", "الإجراء المقترح"]}
+            headers={["البند", "الوصف", "الإتقان", "مستوى الإتقان", "طلاب بحاجة إلى متابعة أو دعم", "الإجراء المقترح"]}
             emptyText="لا توجد تفاصيل مهارات محفوظة لهذا التقرير."
             rows={skillAnalysis.map((skill: any) => [
-              skill.skill || "-",
-              skill.learning_outcome || "-",
+              formatSkillDisplayLabel(skill.skill),
+              formatLearningOutcomeDisplay(skill.learning_outcome),
               `${skill.average_mastery ?? 0}%`,
               levelText(skill.level),
               skill.at_risk_count ?? 0,
@@ -350,7 +354,7 @@ export default function PrintableAnalysisReportPage() {
           />
         </Section>
 
-        <Section title="أولويات المتابعة العلاجية" avoidBreak>
+        <Section title="أولويات الدعم والتدخل" avoidBreak>
           <CompactTable
             compact
             headers={["البند", "التفصيل", "الإجراء المقترح"]}
@@ -362,7 +366,7 @@ export default function PrintableAnalysisReportPage() {
                 skill.recommended_action || "إعادة تدريس قصيرة وتدريب موجّه",
               ]),
               ...studentsAtRisk.slice(0, 3).map((student: any) => [
-                "طالب يحتاج متابعة",
+                getStudentPriorityLabel(student.level),
                 `${formatStudentDisplayName(student.student_name) || "-"} — متوسط الإتقان ${student.average_mastery ?? 0}%`,
                 "تدخل علاجي فردي",
               ]),
@@ -437,7 +441,7 @@ function ReportHeader({
 
         <div className="text-center text-[12px] font-bold leading-6 text-slate-900">
           <p>تاريخ التقرير: {formatHijriDate(record.created_at)}</p>
-          <p>نوع التحليل: {getAnalysisTypeLabel(record.analysis_type)}</p>
+          <p>نوع الاختبار: {getReportHeaderAssessmentLabel(record)}</p>
         </div>
       </div>
     </header>
@@ -492,7 +496,7 @@ function IndicatorsTable({
             <IndicatorTitle title="عدد الطلاب" />
             <IndicatorTitle title="عدد المهارات" />
             <IndicatorTitle title="متوسط الإتقان" />
-            <IndicatorTitle title="طلاب بحاجة متابعة" />
+            <IndicatorTitle title="طلاب بحاجة إلى متابعة أو دعم" />
           </tr>
           <tr>
             <IndicatorValue value={record.students_count ?? 0} />
@@ -910,4 +914,49 @@ function getAssessmentTimingDisplay(timing?: string | null) {
   };
 
   return labels[timing] || timing;
+}
+
+function getReportHeaderAssessmentLabel(record: AnalysisRecord) {
+  const timingLabel = getAssessmentTimingDisplay(record.assessment_timing);
+
+  if (timingLabel) {
+    return timingLabel;
+  }
+
+  return getAnalysisTypeLabel(record.analysis_type);
+}
+
+function isTotalScoreSkill(skill?: string | null) {
+  const value = String(skill || "").trim();
+
+  return (
+    value === "درجة الطالب" ||
+    value === "الدرجة الكلية" ||
+    value === "الدرجة الكلية للمادة" ||
+    value === "نتيجة المادة"
+  );
+}
+
+function formatSkillDisplayLabel(skill?: string | null) {
+  return isTotalScoreSkill(skill) ? "الدرجة الكلية للمادة" : skill || "-";
+}
+
+function formatLearningOutcomeDisplay(outcome?: string | null) {
+  return isTotalScoreSkill(outcome) ? "مستوى الإتقان في الدرجة الكلية للمادة" : outcome || "-";
+}
+
+function getStudentPriorityLabel(level?: string | null) {
+  if (level === "very_low_intervention" || level === "at_risk") {
+    return "طالب بحاجة إلى تدخل علاجي";
+  }
+
+  if (level === "low_support" || level === "needs_improvement") {
+    return "طالب بحاجة إلى دعم تعليمي";
+  }
+
+  if (level === "medium_follow_up") {
+    return "طالب بحاجة إلى متابعة تعليمية";
+  }
+
+  return "طالب بحاجة إلى متابعة";
 }
