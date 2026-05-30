@@ -8,14 +8,27 @@ import SupportWhatsAppButton from "@/components/basirah/SupportWhatsAppButton";
 import "./globals.css";
 import "./reports/print.css";
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "بصيرة",
   description:
     "منصة تحليل تعلم وقياس تربوي لتحويل نتائج الاختبارات والتدريب إلى مؤشرات وتشخيص وتقارير رسمية.",
   icons: {
-    icon: "/baseerah-icon.svg",
-    shortcut: "/baseerah-icon.svg",
-    apple: "/baseerah-icon.svg",
+    icon: "/baseerah-app-icon.png",
+    shortcut: "/baseerah-app-icon.png",
+    apple: "/baseerah-app-icon.png",
+  },
+  openGraph: {
+    title: "بصيرة",
+    description:
+      "منصة تحليل تعلم وقياس تربوي لتحويل نتائج الطلاب إلى مؤشرات وتشخيص وتقارير تربوية.",
+    images: ["/baseerah-logo-full.png"],
   },
 };
 
