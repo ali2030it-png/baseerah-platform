@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus } from "lucide-react";
+
 import { supabase } from "@/lib/supabase/client";
 
 type SignupForm = {
@@ -41,6 +42,7 @@ export default function SignupPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
 
   function updateField(key: keyof SignupForm, value: string) {
     setForm((current) => ({
@@ -51,7 +53,6 @@ export default function SignupPage() {
 
   async function handleSignup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     setError("");
 
     if (!form.first_name.trim()) {
@@ -110,46 +111,72 @@ export default function SignupPage() {
     setLoading(false);
 
     if (signupError) {
-      setError(signupError.message);
+      setError(signupError.message || "تعذر إنشاء الحساب.");
       return;
     }
 
-    router.push("/pending");
+    setDone(true);
+  }
+
+  if (done) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-50 px-4" dir="rtl">
+        <section className="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-black text-teal-700">طلب الانضمام قيد المراجعة</p>
+
+          <h1 className="mt-3 text-3xl font-black text-slate-950">
+            تم إنشاء حسابك بنجاح
+          </h1>
+
+          <p className="mt-3 text-sm font-bold leading-7 text-slate-600">
+            حسابك بانتظار موافقة مدير النظام قبل الدخول إلى منصة بصيرة.
+          </p>
+
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              className="rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-700"
+            >
+              صفحة الدخول
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="rounded-2xl bg-slate-950 px-6 py-3 text-sm font-black text-white"
+            >
+              الصفحة الرئيسية
+            </button>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f7fb] px-6 py-10">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-2">
-        <section className="order-2 text-center lg:order-1">
-          <p className="text-sm font-black text-teal-700">إنشاء حساب جديد</p>
-
-          <h1 className="mt-4 text-5xl font-black leading-tight text-slate-950">
-            انضم إلى منصة بصيرة
-          </h1>
-
-          <p className="mx-auto mt-5 max-w-xl text-base font-bold leading-8 text-slate-600">
-            أنشئ حسابك لاستخدام أدوات تحليل نتائج التدريب والاختبارات، وسيبقى الحساب قيد المراجعة حتى يفعّله مدير النظام.
-          </p>
-        </section>
-
-        <section className="order-1 rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm lg:order-2">
-          <div className="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-black text-slate-950">
-                بيانات الانضمام
-              </h2>
-
-              <p className="mt-2 text-sm font-bold text-slate-500">
-                الأدوار المعتمدة: معلم، معلمة، مرشد، مرشدة
-              </p>
+    <main className="min-h-screen bg-slate-50 px-4 py-8" dir="rtl">
+      <div className="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+          <div className="flex items-start gap-4">
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-teal-700 text-white">
+              <UserPlus size={26} />
             </div>
 
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-teal-700 text-white">
-              <UserPlus size={26} />
+            <div>
+              <p className="text-sm font-black text-teal-700">طلب انضمام</p>
+
+              <h1 className="mt-2 text-3xl font-black text-slate-950">
+                بيانات الانضمام
+              </h1>
+
+              <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
+                الأدوار المعتمدة: مدير مدرسة، مديرة مدرسة، معلم، معلمة، موجه طلابي، موجهة طلابية.
+              </p>
             </div>
           </div>
 
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={handleSignup} className="mt-7 space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <Input
                 label="الاسم الأول"
@@ -163,7 +190,8 @@ export default function SignupPage() {
                 onChange={(value) => updateField("last_name", value)}
               />
             </div>
-<Input
+
+            <Input
               label="اسم المدرسة"
               value={form.school_name}
               onChange={(value) => updateField("school_name", value)}
@@ -187,7 +215,7 @@ export default function SignupPage() {
               <select
                 value={form.role}
                 onChange={(event) => updateField("role", event.target.value)}
-                className="h-14 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black outline-none transition focus:border-teal-600 focus:bg-white"
+                className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black outline-none transition focus:border-teal-600 focus:bg-white"
               >
                 {roleOptions.map((role) => (
                   <option key={role.value} value={role.value}>
@@ -234,6 +262,24 @@ export default function SignupPage() {
             </button>
           </form>
         </section>
+
+        <section className="hidden rounded-[2rem] border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-slate-50 p-8 lg:block">
+          <p className="text-sm font-black text-teal-700">منصة بصيرة</p>
+
+          <h2 className="mt-3 text-4xl font-black leading-tight text-slate-950">
+            تحليل نتائج الطلاب وتحويلها إلى قرارات تعليمية قابلة للتنفيذ
+          </h2>
+
+          <p className="mt-4 text-sm font-bold leading-8 text-slate-600">
+            بعد اعتماد الحساب من مدير النظام، يستطيع المستخدم الدخول إلى أدوات التحليل المناسبة لدوره، مع حفظ التقارير ومتابعة مؤشرات الإتقان وخطط الدعم.
+          </p>
+
+          <div className="mt-8 grid gap-3">
+            <Feature title="تحليل عام" text="تحليل نتائج الطلاب عبر Excel أو الإدخال اليدوي." />
+            <Feature title="تحليل نافس" text="خدمة مستقلة لتحليل نواتج التعلم المستهدفة." />
+            <Feature title="تقارير تربوية" text="تقارير رسمية تدعم تحسين تعلم الطلاب." />
+          </div>
+        </section>
       </div>
     </main>
   );
@@ -251,15 +297,23 @@ function Input({
   type?: string;
 }) {
   return (
-    <label className="grid gap-2">
+    <label className="grid min-w-0 gap-2">
       <span className="text-sm font-black text-slate-700">{label}</span>
-
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-14 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black outline-none transition focus:border-teal-600 focus:bg-white"
+        className="h-14 w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black outline-none transition focus:border-teal-600 focus:bg-white"
       />
     </label>
+  );
+}
+
+function Feature({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="font-black text-slate-950">{title}</p>
+      <p className="mt-1 text-sm font-bold leading-6 text-slate-500">{text}</p>
+    </div>
   );
 }
