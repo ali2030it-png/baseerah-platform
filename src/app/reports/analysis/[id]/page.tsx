@@ -225,7 +225,7 @@ export default function PrintableAnalysisReportPage() {
 
         <section className="mt-3 text-center">
           <h1 className="text-[22px] font-extrabold leading-tight text-slate-950">
-            {record.report_title || "تقرير تحليل نتائج الطلاب"}
+            {getPrintableReportTitle(record)}
           </h1>
         </section>
 
@@ -833,4 +833,34 @@ function getMasteryBarColor(percent?: number | null) {
   if (value < 90) return "bg-emerald-600";
 
   return "bg-teal-700";
+}
+
+function getPrintableReportTitle(record: AnalysisRecord) {
+  const timingLabel = getAssessmentTimingDisplay(record.assessment_timing);
+  const subject = record.subject || "نتائج الطلاب";
+
+  if (timingLabel.includes("نهاية الفترة")) {
+    return `تحليل ${timingLabel} - ${subject}`;
+  }
+
+  return record.report_title || `تقرير تحليل نتائج ${subject}`;
+}
+
+function getAssessmentTimingDisplay(timing?: string | null) {
+  if (!timing) return "";
+
+  const labels: Record<string, string> = {
+    first_period: "نهاية الفترة الأولى",
+    second_period: "نهاية الفترة الثانية",
+    period_1: "نهاية الفترة الأولى",
+    period_2: "نهاية الفترة الثانية",
+    period_one: "نهاية الفترة الأولى",
+    period_two: "نهاية الفترة الثانية",
+    first_period_end: "نهاية الفترة الأولى",
+    second_period_end: "نهاية الفترة الثانية",
+    "نهاية الفترة الأولى": "نهاية الفترة الأولى",
+    "نهاية الفترة الثانية": "نهاية الفترة الثانية",
+  };
+
+  return labels[timing] || timing;
 }

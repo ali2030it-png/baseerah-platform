@@ -22,7 +22,12 @@ export async function GET() {
 
   const workbook = XLSX.utils.book_new();
 
+  workbook.Workbook = {
+    Views: [{ RTL: true }],
+  };
+
   const sheet = XLSX.utils.aoa_to_sheet(rows);
+  sheet["!rtl"] = true;
   sheet["!cols"] = [
     { wch: 18 },
     { wch: 38 },
@@ -30,6 +35,7 @@ export async function GET() {
   ];
 
   const guideSheet = XLSX.utils.aoa_to_sheet(guide);
+  guideSheet["!rtl"] = true;
   guideSheet["!cols"] = [
     { wch: 12 },
     { wch: 100 },

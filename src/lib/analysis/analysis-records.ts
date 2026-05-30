@@ -82,7 +82,7 @@ export function buildAnalysisRecordPayload({
     skills_count: analysis.total_skills ?? 0,
     overall_mastery: analysis.overall_mastery ?? 0,
     improvement_rate: analysis.improvement_rate ?? null,
-    report_title: `تحليل ${getAnalysisTypeLabel(analysisType)} - ${subject}`,
+    report_title: `تحليل ${buildReportTitleLabel(analysisType, metadata?.assessment_timing)} - ${subject}`,
     analysis_snapshot: analysis,
     record_fingerprint: recordFingerprint,
     content_hash: contentHash,
@@ -235,3 +235,32 @@ function getAnalysisTypeLabel(type?: string | null) {
 
 
 
+
+function getAssessmentTimingReportLabel(timing?: string | null) {
+  if (!timing) return "";
+
+  const labels: Record<string, string> = {
+    first_period: "نهاية الفترة الأولى",
+    second_period: "نهاية الفترة الثانية",
+    period_1: "نهاية الفترة الأولى",
+    period_2: "نهاية الفترة الثانية",
+    period_one: "نهاية الفترة الأولى",
+    period_two: "نهاية الفترة الثانية",
+    first_period_end: "نهاية الفترة الأولى",
+    second_period_end: "نهاية الفترة الثانية",
+    "نهاية الفترة الأولى": "نهاية الفترة الأولى",
+    "نهاية الفترة الثانية": "نهاية الفترة الثانية",
+  };
+
+  return labels[timing] || timing;
+}
+
+function buildReportTitleLabel(analysisType?: string | null, assessmentTiming?: string | null) {
+  const timingLabel = getAssessmentTimingReportLabel(assessmentTiming);
+
+  if (timingLabel.includes("نهاية الفترة")) {
+    return timingLabel;
+  }
+
+  return getAnalysisTypeLabel(analysisType);
+}

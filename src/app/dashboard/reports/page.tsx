@@ -243,7 +243,7 @@ export default function TeacherReportsPage() {
 
                     <td className="p-4">
                       <span className="rounded-full border border-teal-100 bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">
-                        {getAnalysisTypeLabel(record.analysis_type)}
+                        {getReportTypeDisplay(record)}
                       </span>
                     </td>
 
@@ -350,3 +350,28 @@ function round(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+
+function getReportTypeDisplay(record: AnalysisRecord) {
+  const timing = String(record.assessment_timing || "").trim();
+
+  const timingLabels: Record<string, string> = {
+    first_period: "نهاية الفترة الأولى",
+    second_period: "نهاية الفترة الثانية",
+    period_1: "نهاية الفترة الأولى",
+    period_2: "نهاية الفترة الثانية",
+    period_one: "نهاية الفترة الأولى",
+    period_two: "نهاية الفترة الثانية",
+    first_period_end: "نهاية الفترة الأولى",
+    second_period_end: "نهاية الفترة الثانية",
+    "نهاية الفترة الأولى": "نهاية الفترة الأولى",
+    "نهاية الفترة الثانية": "نهاية الفترة الثانية",
+  };
+
+  const timingLabel = timingLabels[timing] || timing;
+
+  if (timingLabel.includes("نهاية الفترة")) {
+    return timingLabel;
+  }
+
+  return getAnalysisTypeLabel(record.analysis_type);
+}
