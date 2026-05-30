@@ -262,5 +262,12 @@ function buildReportTitleLabel(analysisType?: string | null, assessmentTiming?: 
     return timingLabel;
   }
 
+  if (
+    timingLabel.includes("نافس") ||
+    String(analysisType || "").toLowerCase() === "nafs"
+  ) {
+    return "تدريب نافس";
+  }
+
   return getAnalysisTypeLabel(analysisType);
 }

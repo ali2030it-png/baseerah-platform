@@ -230,7 +230,7 @@ export default function TeacherReportsPage() {
                 {filteredRecords.map((record) => (
                   <tr key={record.id}>
                     <td className="p-4 font-black text-slate-900">
-                      {record.report_title || "تقرير تحليل نتائج"}
+                      {getReportTitleDisplay(record)}
                     </td>
 
                     <td className="p-4 font-bold">
@@ -274,7 +274,7 @@ export default function TeacherReportsPage() {
 
                         <DeleteAnalysisRecordButton
                           recordId={record.id}
-                          reportTitle={record.report_title}
+                          reportTitle={getReportTitleDisplay(record)}
                           onDeleted={() =>
                             setRecords((currentRecords) =>
                               currentRecords.filter((item) => item.id !== record.id)
@@ -373,5 +373,23 @@ function getReportTypeDisplay(record: AnalysisRecord) {
     return timingLabel;
   }
 
+  if (
+    timingLabel.includes("نافس") ||
+    String(record.analysis_type || "").toLowerCase() === "nafs"
+  ) {
+    return "تدريب نافس";
+  }
+
   return getAnalysisTypeLabel(record.analysis_type);
+}
+
+function getReportTitleDisplay(record: AnalysisRecord) {
+  const typeLabel = getReportTypeDisplay(record);
+  const subject = record.subject || "نتائج الطلاب";
+
+  if (typeLabel.includes("نافس")) {
+    return `تحليل ${typeLabel} - ${subject}`;
+  }
+
+  return record.report_title || `تقرير تحليل نتائج ${subject}`;
 }

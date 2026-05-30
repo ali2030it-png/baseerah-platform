@@ -916,7 +916,7 @@ function getPrintableReportTitle(record: AnalysisRecord) {
   const timingLabel = getAssessmentTimingDisplay(record.assessment_timing);
   const subject = record.subject || "نتائج الطلاب";
 
-  if (timingLabel.includes("نهاية الفترة")) {
+  if (timingLabel.includes("نهاية الفترة") || timingLabel.includes("نافس")) {
     return `تحليل ${timingLabel} - ${subject}`;
   }
 

@@ -33,7 +33,7 @@ const DEFAULT_METADATA = {
   class_name: "",
   semester: "",
   assessment_title: "تحليل تدريب نافس - نواتج التعلم",
-  assessment_purpose: "formative",
+  assessment_purpose: "nafs",
   assessment_timing: "تدريب نافس",
   assessment_date: "",
   national_exam_type: "nafs",
@@ -502,4 +502,3 @@ function Stat({ title, value }: { title: string; value: string | number }) {
     </div>
   );
 }
-
