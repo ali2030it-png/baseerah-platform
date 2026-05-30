@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileSpreadsheet, FileText, Target, TrendingUp } from "lucide-react";
+import { FileSpreadsheet, FileText, TrendingUp } from "lucide-react";
 
 const cards = [
   {
@@ -13,12 +13,6 @@ const cards = [
     desc: "تقارير تحليلية مرتبة تتضمن مؤشرات الإتقان، الرسوم البيانية، النتائج التفصيلية، والتوصيات التربوية.",
     href: "/dashboard/reports",
     icon: FileText,
-  },
-  {
-    title: "الخطط العلاجية",
-    desc: "حوّل نتائج التحليل إلى إجراءات دعم ومتابعة قابلة للتنفيذ داخل الصف والمدرسة.",
-    href: "/dashboard/remedial",
-    icon: Target,
   },
 ];
 

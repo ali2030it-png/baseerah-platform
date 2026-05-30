@@ -48,24 +48,6 @@ const items = [
   },
 
   {
-    title: "اختبارات نهاية العام",
-    href: "/dashboard/assessments",
-    icon: ClipboardCheck,
-  },
-
-  {
-    title: "الطلاب المتعثرون",
-    href: "/dashboard/remedial",
-    icon: UsersRound,
-  },
-
-  {
-    title: "الخطط العلاجية",
-    href: "/dashboard/remedial/plans",
-    icon: Target,
-  },
-
-  {
     title: "التقارير",
     href: "/dashboard/reports",
     icon: FileText,
@@ -89,7 +71,7 @@ export function BasirahSidebar() {
         </p>
 
         <h2 className="mt-1 text-2xl font-black">
-          تحليل تعلم ذكي
+          تحليل نتائج الطلاب
         </h2>
 
         <p className="mt-2 text-xs font-bold leading-6 text-slate-300">
@@ -126,5 +108,3 @@ export function BasirahSidebar() {
     </aside>
   );
 }
-
-
