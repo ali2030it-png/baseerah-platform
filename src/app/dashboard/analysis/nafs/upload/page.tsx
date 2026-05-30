@@ -15,11 +15,17 @@ import {
 } from "@/lib/analysis/skill-analytics";
 import { saveAnalysisRecordToDatabase } from "@/lib/analysis/save-analysis-record";
 import {
-  gradeLevelLabels,
   semesterLabels,
   subjectLabels,
 } from "@/lib/analysis/assessment-metadata";
 import { supabase } from "@/lib/supabase/client";
+
+const nafsGradeLevelLabels: Record<string, string> = {
+  "": "اختر الصف المستهدف",
+  "الثالث الابتدائي": "الثالث الابتدائي",
+  "السادس الابتدائي": "السادس الابتدائي",
+  "الثالث المتوسط": "الثالث المتوسط",
+};
 
 const DEFAULT_METADATA = {
   subject: "",
@@ -49,7 +55,11 @@ export default function NafsUploadPage() {
 
   function validateMetadata() {
     if (!metadata.subject) return "اختر المادة قبل رفع ملف نافس.";
-    if (!metadata.grade_level) return "اختر الصف قبل رفع ملف نافس.";
+    if (!metadata.grade_level) return "اختر الصف المستهدف قبل رفع ملف نافس.";
+
+    if (!Object.keys(nafsGradeLevelLabels).includes(metadata.grade_level)) {
+      return "تحليل نافس في بصيرة مخصص حاليًا للصف الثالث الابتدائي، والسادس الابتدائي، والثالث المتوسط.";
+    }
     if (!metadata.semester) return "اختر الفصل الدراسي قبل رفع ملف نافس.";
     return "";
   }
@@ -191,7 +201,7 @@ export default function NafsUploadPage() {
           <Select
             label="الصف"
             value={metadata.grade_level}
-            options={gradeLevelLabels}
+            options={nafsGradeLevelLabels}
             onChange={(value) => setMetadata({ ...metadata, grade_level: value })}
           />
 
@@ -492,3 +502,4 @@ function Stat({ title, value }: { title: string; value: string | number }) {
     </div>
   );
 }
+
