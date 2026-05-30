@@ -1,23 +1,10 @@
-import { TeacherFeaturePage } from "@/components/basirah/TeacherFeaturePage";
+import { UnderDevelopmentPage } from "@/components/basirah/UnderDevelopmentPage";
 
-export default function Page() {
+export default function RemedialPage() {
   return (
-    <TeacherFeaturePage
-      eyebrow="الخطط العلاجية"
-      title="بناء الخطط العلاجية"
-      description="بعد تحليل النتائج، يمكن تحويل المهارات الحرجة والطلاب المتعثرين إلى خطط علاجية قابلة للمتابعة."
-      actions={[
-        {
-          title: "رفع تحليل جديد",
-          description: "ابدأ بتحليل النتائج أولًا لتحديد المهارات الحرجة.",
-          href: "/dashboard/analysis/upload",
-        },
-        {
-          title: "خططي العلاجية",
-          description: "عرض وتنظيم الخطط العلاجية.",
-          href: "/dashboard/remedial/plans",
-        },
-      ]}
+    <UnderDevelopmentPage
+      title="الخطط العلاجية"
+      description="خدمة قادمة لبناء خطط الدعم والتحسين بناءً على نتائج التحليل ومواطن الضعف لدى الطلاب."
     />
   );
 }

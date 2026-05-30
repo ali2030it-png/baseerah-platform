@@ -1,18 +1,10 @@
-import { TeacherFeaturePage } from "@/components/basirah/TeacherFeaturePage";
+import { UnderDevelopmentPage } from "@/components/basirah/UnderDevelopmentPage";
 
-export default function Page() {
+export default function TahsiliAnalysisPage() {
   return (
-    <TeacherFeaturePage
-      eyebrow="تحليل التحصيلي"
-      title="تحليل نتائج التحصيلي"
-      description="صفحة مخصصة لتحليل نتائج التحصيلي، وربطها لاحقًا بالتقارير والمؤشرات العامة."
-      actions={[
-        {
-          title: "رفع نتائج التحصيلي",
-          description: "ابدأ بتحليل النتائج من مركز الإدخال.",
-          href: "/dashboard/analysis/upload",
-        },
-      ]}
+    <UnderDevelopmentPage
+      title="تحليل التحصيلي"
+      description="خدمة مقترحة لتحليل اختبارات التحصيل الدراسي وربط النتائج بمواطن القوة والضعف والتوصيات التعليمية."
     />
   );
 }

@@ -17,6 +17,7 @@ const primaryCards = [
     href: "/dashboard/analysis/upload",
     icon: FileSpreadsheet,
     action: "ابدأ التحليل",
+    status: "ready",
   },
   {
     title: "تحليل نافس",
@@ -24,6 +25,7 @@ const primaryCards = [
     href: "/dashboard/analysis/nafs",
     icon: BarChart3,
     action: "فتح نافس",
+    status: "ready",
   },
   {
     title: "التقارير ومشاركة واتساب",
@@ -31,27 +33,31 @@ const primaryCards = [
     href: "/dashboard/reports",
     icon: Send,
     action: "عرض التقارير",
+    status: "ready",
   },
 ];
 
 const secondaryCards = [
   {
     title: "الخطط العلاجية",
-    desc: "مساحة تنظيمية لبناء خطط الدعم والتحسين في ضوء نتائج التحليل.",
+    desc: "خدمة قادمة لبناء خطط الدعم والتحسين في ضوء نتائج التحليل.",
     href: "/dashboard/remedial",
     icon: Target,
+    status: "development",
   },
   {
     title: "الاختبارات والتدريبات",
-    desc: "تنظيم الاختبارات والتدريبات التي تُبنى عليها التحليلات.",
+    desc: "خدمة قادمة لتنظيم الاختبارات والتدريبات التي تُبنى عليها التحليلات.",
     href: "/dashboard/assessments",
     icon: ClipboardCheck,
+    status: "development",
   },
   {
     title: "الإعدادات",
     desc: "إعدادات المدرسة والحساب والبيانات الأساسية للمنصة.",
     href: "/dashboard/settings",
     icon: Settings,
+    status: "ready",
   },
 ];
 
@@ -114,8 +120,12 @@ export default function DashboardPage() {
               href={card.href}
               className="group rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-md"
             >
-              <div className="mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-teal-50 text-teal-700">
-                <Icon size={25} />
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-teal-50 text-teal-700">
+                  <Icon size={25} />
+                </div>
+
+                <StatusBadge status={card.status} />
               </div>
 
               <h3 className="text-xl font-black text-slate-950">{card.title}</h3>
@@ -136,6 +146,7 @@ export default function DashboardPage() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-black text-teal-700">خدمات مساندة</p>
+
             <h2 className="mt-1 text-2xl font-black text-slate-950">
               أدوات تنظيمية داخل بصيرة
             </h2>
@@ -154,8 +165,12 @@ export default function DashboardPage() {
                 href={card.href}
                 className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white hover:shadow-sm"
               >
-                <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-white text-teal-700">
-                  <Icon size={22} />
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-white text-teal-700">
+                    <Icon size={22} />
+                  </div>
+
+                  <StatusBadge status={card.status} />
                 </div>
 
                 <h3 className="font-black text-slate-950">{card.title}</h3>
@@ -169,5 +184,21 @@ export default function DashboardPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === "development") {
+    return (
+      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700 ring-1 ring-amber-200">
+        تحت التطوير
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-black text-teal-700 ring-1 ring-teal-200">
+      جاهز
+    </span>
   );
 }

@@ -1,18 +1,10 @@
-import { TeacherFeaturePage } from "@/components/basirah/TeacherFeaturePage";
+import { UnderDevelopmentPage } from "@/components/basirah/UnderDevelopmentPage";
 
-export default function Page() {
+export default function QudratAnalysisPage() {
   return (
-    <TeacherFeaturePage
-      eyebrow="تحليل القدرات"
-      title="تحليل نتائج القدرات"
-      description="صفحة مخصصة لتحليل نتائج القدرات عند توفر البيانات، مع إمكانية البدء من مركز إدخال النتائج."
-      actions={[
-        {
-          title: "رفع نتائج القدرات",
-          description: "ابدأ بإدخال النتائج وحفظ التحليل.",
-          href: "/dashboard/analysis/upload",
-        },
-      ]}
+    <UnderDevelopmentPage
+      title="تحليل القدرات"
+      description="خدمة مقترحة لتحليل تدريبات واختبارات القدرات وربط نتائجها بمؤشرات أداء تساعد على بناء خطط تحسين لاحقة."
     />
   );
 }

@@ -1,18 +1,10 @@
-import { TeacherFeaturePage } from "@/components/basirah/TeacherFeaturePage";
+import { UnderDevelopmentPage } from "@/components/basirah/UnderDevelopmentPage";
 
-export default function Page() {
+export default function AssessmentsPage() {
   return (
-    <TeacherFeaturePage
-      eyebrow="اختبارات نهاية العام"
-      title="تحليل اختبارات نهاية العام"
-      description="ارفع نتائج الاختبارات الختامية واحفظ التحليل ليظهر في تقاريرك وتقارير مدير النظام."
-      actions={[
-        {
-          title: "رفع نتائج الاختبار",
-          description: "تحليل نتائج نهاية الفترة أو الفصل أو العام.",
-          href: "/dashboard/analysis/upload",
-        },
-      ]}
+    <UnderDevelopmentPage
+      title="الاختبارات والتدريبات"
+      description="مساحة مستقبلية لتنظيم الاختبارات والتدريبات التي تُبنى عليها التحليلات، وربطها بنواتج التعلم والتقارير."
     />
   );
 }
