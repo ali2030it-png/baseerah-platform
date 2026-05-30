@@ -164,12 +164,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="mt-8 rounded-[2rem] bg-slate-950 p-6 text-white">
-            <p className="text-sm font-black text-teal-300">فلسفة بصيرة</p>
-            <p className="mt-3 text-xl font-black">
-              لا نكتفي بعرض النتائج، بل نربطها بالتشخيص والتوصيات وخطط الدعم.
-            </p>
-          </div>
+
         </section>
       </div>
     </main>

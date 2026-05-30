@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, FileText, Search, UploadCloud } from "lucide-react";
+import { BarChart3, FileText, MessageCircle, Search, UploadCloud } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { DeleteAnalysisRecordButton } from "@/components/basirah/DeleteAnalysisRecordButton";
@@ -272,6 +272,16 @@ export default function TeacherReportsPage() {
                           عرض التقرير
                         </Link>
 
+                        <a
+                          href={buildWhatsAppShareUrl(record)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700 transition hover:bg-emerald-100"
+                        >
+                          <MessageCircle size={14} />
+                          مشاركة واتساب
+                        </a>
+
                         <DeleteAnalysisRecordButton
                           recordId={record.id}
                           reportTitle={getReportTitleDisplay(record)}
@@ -392,4 +402,28 @@ function getReportTitleDisplay(record: AnalysisRecord) {
   }
 
   return record.report_title || `تقرير تحليل نتائج ${subject}`;
+}
+
+function buildWhatsAppShareUrl(record: AnalysisRecord) {
+  const title = getReportTitleDisplay(record);
+  const subject = record.subject || "غير محدد";
+  const gradeLevel = record.grade_level || "";
+  const reportPath = `/reports/analysis/${record.id}`;
+  const reportUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${reportPath}`
+      : reportPath;
+
+  const message = [
+    "السلام عليكم،",
+    `نرفق لكم تقرير تحليل نتائج الطلاب: ${title}.`,
+    `المادة: ${subject}.`,
+    gradeLevel ? `الصف: ${gradeLevel}.` : "",
+    `رابط التقرير: ${reportUrl}`,
+    "نأمل الاطلاع على مؤشرات الإتقان والتوصيات واتخاذ ما يلزم من إجراءات الدعم والتحسين.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
