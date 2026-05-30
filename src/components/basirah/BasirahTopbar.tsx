@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
 
 import { roleLabel } from "@/lib/auth/roles";
 import { supabase } from "@/lib/supabase/client";
