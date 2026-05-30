@@ -6,7 +6,8 @@ import { UserPlus } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 type SignupForm = {
-  full_name: string;
+  first_name: string;
+  last_name: string;
   school_name: string;
   region: string;
   mobile: string;
@@ -28,7 +29,8 @@ export default function SignupPage() {
   const router = useRouter();
 
   const [form, setForm] = useState<SignupForm>({
-    full_name: "",
+    first_name: "",
+    last_name: "",
     school_name: "",
     region: "",
     mobile: "",
@@ -52,8 +54,13 @@ export default function SignupPage() {
 
     setError("");
 
-    if (!form.full_name.trim()) {
-      setError("أدخل الاسم الكامل.");
+    if (!form.first_name.trim()) {
+      setError("أدخل الاسم الأول.");
+      return;
+    }
+
+    if (!form.last_name.trim()) {
+      setError("أدخل الاسم الأخير.");
       return;
     }
 
@@ -82,6 +89,8 @@ export default function SignupPage() {
       return;
     }
 
+    const fullName = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
+
     setLoading(true);
 
     const { error: signupError } = await supabase.auth.signUp({
@@ -89,7 +98,7 @@ export default function SignupPage() {
       password: form.password,
       options: {
         data: {
-          full_name: form.full_name.trim(),
+          full_name: fullName,
           school_name: form.school_name.trim(),
           region: form.region.trim(),
           mobile: form.mobile.trim(),
@@ -141,13 +150,20 @@ export default function SignupPage() {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">
-            <Input
-              label="الاسم الكامل"
-              value={form.full_name}
-              onChange={(value) => updateField("full_name", value)}
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input
+                label="الاسم الأول"
+                value={form.first_name}
+                onChange={(value) => updateField("first_name", value)}
+              />
 
-            <Input
+              <Input
+                label="الاسم الأخير"
+                value={form.last_name}
+                onChange={(value) => updateField("last_name", value)}
+              />
+            </div>
+<Input
               label="اسم المدرسة"
               value={form.school_name}
               onChange={(value) => updateField("school_name", value)}
