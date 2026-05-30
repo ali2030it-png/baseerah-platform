@@ -207,23 +207,15 @@ function buildStudentsNote(
   studentsBetween60And70: number,
   studentsBetween70And80: number
 ): string | undefined {
-  const parts: string[] = [];
-
-  if (studentsBelow60 > 0) {
-    parts.push(`عدد الطلاب في مستوى إتقان متدنٍ يحتاج تدخلًا علاجيًا: ${studentsBelow60}`);
+  if (
+    studentsBelow60 <= 0 &&
+    studentsBetween60And70 <= 0 &&
+    studentsBetween70And80 <= 0
+  ) {
+    return undefined;
   }
 
-  if (studentsBetween60And70 > 0) {
-    parts.push(`عدد الطلاب في مستوى إتقان منخفض يحتاج دعمًا: ${studentsBetween60And70}`);
-  }
-
-  if (studentsBetween70And80 > 0) {
-    parts.push(`عدد الطلاب في مستوى إتقان متوسط يحتاج متابعة: ${studentsBetween70And80}`);
-  }
-
-  if (parts.length === 0) return undefined;
-
-  return `توجد حاجة إلى متابعة تعليمية موجهة؛ ${parts.join("، ")}.`;
+  return "توجد حاجة إلى متابعة تعليمية موجهة.";
 }
 
 function buildSkillsNote(

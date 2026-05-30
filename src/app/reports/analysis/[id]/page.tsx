@@ -256,6 +256,7 @@ export default function PrintableAnalysisReportPage() {
           record={record}
           studentStats={studentStats}
           followUpCount={followUpCount || studentsAtRisk.length}
+          hasDetailedSkillAnalysis={hasDetailedSkillAnalysis}
         />
 
         <Section title="الرسوم البيانية">
@@ -287,7 +288,7 @@ export default function PrintableAnalysisReportPage() {
               />
             </ChartCard>
 
-            <ChartCard title="إتقان المهارات">
+            <ChartCard title={hasDetailedSkillAnalysis ? "إتقان المهارات" : "إتقان الدرجة الكلية"}>
               {skillAnalysis.length > 0 ? (
                 skillAnalysis.slice(0, 6).map((skill: any, index: number) => (
                   <ChartBar
@@ -310,8 +311,11 @@ export default function PrintableAnalysisReportPage() {
 
         <Section title="الملخص التنفيذي">
           <p className="text-[11px] font-bold leading-6 text-slate-700">
-            {snapshot?.educational_summary ||
-              `بلغ متوسط الإتقان العام ${record.overall_mastery ?? 0}%، ويعرض هذا التقرير ملخصًا تربويًا للنتائج المحفوظة.`}
+            {getEducationalSummaryText(
+              snapshot?.educational_summary,
+              Number(record.overall_mastery) || 0,
+              followUpCount
+            )}
           </p>
 
           <p className="mt-2 border border-slate-200 bg-slate-50 p-2 text-[10px] font-bold leading-5 text-slate-600">
@@ -345,10 +349,7 @@ export default function PrintableAnalysisReportPage() {
               formatStudentScoreOnly(student.score_summary),
               `${student.average_mastery ?? 0}%`,
               levelText(student.level),
-              student.follow_up_area ||
-                (Array.isArray(student.weak_skills) && student.weak_skills.length > 0
-                  ? student.weak_skills.join("، ")
-                  : "لا يوجد"),
+              formatStudentFollowUpArea(student),
               getStudentAlert(student.level),
             ])}
           />
@@ -374,14 +375,37 @@ export default function PrintableAnalysisReportPage() {
           />
         </Section>
 
-        <Section title={educationalRecommendation.title} printBreakBefore avoidBreak>
+        <Section title={getRecommendationSectionTitle(educationalRecommendation.title, studentStats)} printBreakBefore avoidBreak>
           <div className="space-y-2 text-[11px] font-bold leading-6 text-slate-700">
             <p>{educationalRecommendation.summary}</p>
 
             {educationalRecommendation.focusStudentsNote && (
-              <p className="border border-amber-200 bg-amber-50 p-2 text-amber-800">
-                {educationalRecommendation.focusStudentsNote}
-              </p>
+              <div className="border border-amber-200 bg-amber-50 p-2 text-amber-800">
+                <p>توجد حاجة إلى متابعة تعليمية موجهة:</p>
+
+                <ul className="mt-1 list-disc space-y-1 pr-5">
+                  {studentStats.veryLowIntervention > 0 && (
+                    <li>
+                      عدد الطلاب في مستوى إتقان متدنٍ يحتاج تدخلًا علاجيًا:{" "}
+                      {studentStats.veryLowIntervention}
+                    </li>
+                  )}
+
+                  {studentStats.lowSupport > 0 && (
+                    <li>
+                      عدد الطلاب في مستوى إتقان منخفض يحتاج دعمًا:{" "}
+                      {studentStats.lowSupport}
+                    </li>
+                  )}
+
+                  {studentStats.mediumFollowUp > 0 && (
+                    <li>
+                      عدد الطلاب في مستوى إتقان متوسط يحتاج متابعة:{" "}
+                      {studentStats.mediumFollowUp}
+                    </li>
+                  )}
+                </ul>
+              </div>
             )}
 
             {educationalRecommendation.focusSkillsNote && (
@@ -477,6 +501,7 @@ function IndicatorsTable({
   record,
   studentStats,
   followUpCount,
+  hasDetailedSkillAnalysis,
 }: {
   record: AnalysisRecord;
   studentStats: {
@@ -487,6 +512,7 @@ function IndicatorsTable({
     veryLowIntervention: number;
   };
   followUpCount: number;
+  hasDetailedSkillAnalysis: boolean;
 }) {
   return (
     <section className="mt-3 overflow-hidden border border-slate-300 bg-white">
@@ -494,7 +520,7 @@ function IndicatorsTable({
         <tbody>
           <tr className="bg-slate-100">
             <IndicatorTitle title="عدد الطلاب" />
-            <IndicatorTitle title="عدد المهارات" />
+            <IndicatorTitle title={hasDetailedSkillAnalysis ? "عدد المهارات" : "بنود التحليل"} />
             <IndicatorTitle title="متوسط الإتقان" />
             <IndicatorTitle title="طلاب بحاجة إلى متابعة أو دعم" />
           </tr>
@@ -959,4 +985,67 @@ function getStudentPriorityLabel(level?: string | null) {
   }
 
   return "طالب بحاجة إلى متابعة";
+}
+
+function formatStudentFollowUpArea(student: any) {
+  const followUpArea = String(student?.follow_up_area || "").trim();
+
+  if (followUpArea && followUpArea !== "لا يوجد") {
+    return formatFollowUpArea(followUpArea);
+  }
+
+  if (Array.isArray(student?.weak_skills) && student.weak_skills.length > 0) {
+    return student.weak_skills.map(formatSkillDisplayLabel).join("، ");
+  }
+
+  return "لا يوجد";
+}
+
+function formatFollowUpArea(area?: string | null) {
+  return isTotalScoreSkill(area) ? "الدرجة الكلية للمادة" : area || "لا يوجد";
+}
+
+function getEducationalSummaryText(
+  summary: string | undefined,
+  overallMastery: number,
+  followUpCount: number
+) {
+  if (followUpCount > 0) {
+    return `تشير النتائج إلى أن متوسط الإتقان العام بلغ ${overallMastery}%، ويصنف في مستوى "${levelText(getOverallLevel(overallMastery))}"، مع وجود فئة من الطلاب بحاجة إلى متابعة أو دعم تعليمي موجه رغم ارتفاع المتوسط العام.`;
+  }
+
+  return (
+    summary ||
+    `بلغ متوسط الإتقان العام ${overallMastery}%، ويعرض هذا التقرير ملخصًا تربويًا للنتائج المحفوظة.`
+  );
+}
+
+function getRecommendationSectionTitle(
+  currentTitle: string,
+  studentStats: {
+    veryHigh: number;
+    high: number;
+    mediumFollowUp: number;
+    lowSupport: number;
+    veryLowIntervention: number;
+  }
+) {
+  const hasSupportNeed =
+    studentStats.mediumFollowUp > 0 ||
+    studentStats.lowSupport > 0 ||
+    studentStats.veryLowIntervention > 0;
+
+  if (hasSupportNeed && currentTitle === "توصيات تعزيز وتحسين") {
+    return "توصيات تعزيز ودعم مستهدف";
+  }
+
+  return currentTitle;
+}
+
+function getOverallLevel(percent: number) {
+  if (percent >= 90) return "very_high";
+  if (percent >= 80) return "high";
+  if (percent >= 70) return "medium_follow_up";
+  if (percent >= 60) return "low_support";
+  return "very_low_intervention";
 }
