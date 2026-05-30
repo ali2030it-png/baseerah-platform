@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   title: "بصيرة",
   description:
     "منصة تحليل تعلم وقياس تربوي لتحويل نتائج الاختبارات والتدريب إلى مؤشرات وتشخيص وتقارير رسمية.",
+  icons: {
+    icon: "/baseerah-icon.svg",
+    shortcut: "/baseerah-icon.svg",
+    apple: "/baseerah-icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -28,4 +33,3 @@ export default function RootLayout({
     </html>
   );
 }
-

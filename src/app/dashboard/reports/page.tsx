@@ -276,10 +276,12 @@ export default function TeacherReportsPage() {
                           href={buildWhatsAppShareUrl(record)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700 transition hover:bg-emerald-100"
+                          title="مشاركة التقرير عبر واتساب"
+                          aria-label="مشاركة التقرير عبر واتساب"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
                         >
-                          <MessageCircle size={14} />
-                          مشاركة واتساب
+                          <MessageCircle size={16} />
+                          <span className="sr-only">مشاركة واتساب</span>
                         </a>
 
                         <DeleteAnalysisRecordButton
