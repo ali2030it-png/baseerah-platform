@@ -146,10 +146,21 @@ export default function PrintableAnalysisReportPage() {
 
   const studentStats = useMemo(() => {
     return {
-      excellent: studentAnalysis.filter((student: any) => student.level === "excellent").length,
-      mastered: studentAnalysis.filter((student: any) => student.level === "mastered").length,
-      needsImprovement: studentAnalysis.filter((student: any) => student.level === "needs_improvement").length,
-      atRisk: studentAnalysis.filter((student: any) => student.level === "at_risk").length,
+      veryHigh: studentAnalysis.filter((student: any) =>
+        student.level === "very_high" || student.level === "excellent"
+      ).length,
+      high: studentAnalysis.filter((student: any) =>
+        student.level === "high" || student.level === "mastered"
+      ).length,
+      mediumFollowUp: studentAnalysis.filter((student: any) =>
+        student.level === "medium_follow_up"
+      ).length,
+      lowSupport: studentAnalysis.filter((student: any) =>
+        student.level === "low_support" || student.level === "needs_improvement"
+      ).length,
+      veryLowIntervention: studentAnalysis.filter((student: any) =>
+        student.level === "very_low_intervention" || student.level === "at_risk"
+      ).length,
     };
   }, [studentAnalysis]);
 
@@ -247,26 +258,26 @@ export default function PrintableAnalysisReportPage() {
           <div className="grid gap-3 md:grid-cols-2 print:grid-cols-2">
             <ChartCard title="توزيع مستويات الطلاب">
               <ChartBar
-                label="إتقان مرتفع"
-                value={studentStats.excellent}
+                label="إتقان مرتفع جدًا"
+                value={studentStats.veryHigh}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-teal-700"
               />
               <ChartBar
-                label="متقنون"
-                value={studentStats.mastered}
+                label="إتقان مرتفع"
+                value={studentStats.high}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-emerald-600"
               />
               <ChartBar
-                label="بحاجة إلى تحسين"
-                value={studentStats.needsImprovement}
+                label="إتقان متوسط يحتاج متابعة"
+                value={studentStats.mediumFollowUp}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-amber-500"
               />
               <ChartBar
-                label="متعثرون"
-                value={studentStats.atRisk}
+                label="إتقان منخفض أو متدنٍ"
+                value={studentStats.lowSupport + studentStats.veryLowIntervention}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-rose-600"
               />
@@ -465,10 +476,11 @@ function IndicatorsTable({
 }: {
   record: AnalysisRecord;
   studentStats: {
-    excellent: number;
-    mastered: number;
-    needsImprovement: number;
-    atRisk: number;
+    veryHigh: number;
+    high: number;
+    mediumFollowUp: number;
+    lowSupport: number;
+    veryLowIntervention: number;
   };
   followUpCount: number;
 }) {
@@ -489,16 +501,16 @@ function IndicatorsTable({
             <IndicatorValue value={followUpCount} danger />
           </tr>
           <tr className="bg-slate-100">
+            <IndicatorTitle title="إتقان مرتفع جدًا" />
             <IndicatorTitle title="إتقان مرتفع" />
-            <IndicatorTitle title="متقنون" />
-            <IndicatorTitle title="بحاجة إلى تحسين" />
-            <IndicatorTitle title="متعثرون" />
+            <IndicatorTitle title="يحتاج متابعة" />
+            <IndicatorTitle title="يحتاج دعم/تدخل" />
           </tr>
           <tr>
-            <IndicatorValue value={studentStats.excellent} />
-            <IndicatorValue value={studentStats.mastered} />
-            <IndicatorValue value={studentStats.needsImprovement} />
-            <IndicatorValue value={studentStats.atRisk} danger />
+            <IndicatorValue value={studentStats.veryHigh} />
+            <IndicatorValue value={studentStats.high} />
+            <IndicatorValue value={studentStats.mediumFollowUp} />
+            <IndicatorValue value={studentStats.lowSupport + studentStats.veryLowIntervention} danger />
           </tr>
         </tbody>
       </table>
@@ -727,19 +739,54 @@ function levelText(level?: string) {
 }
 
 function getSkillAlert(level?: string, atRiskCount?: number) {
-  if (level === "at_risk") return "تدخل عاجل";
-  if (level === "needs_improvement") return "إعادة تدريس";
-  if ((atRiskCount || 0) > 0) return "متابعة";
-  if (level === "excellent") return "إثراء";
-  if (level === "mastered") return "تعزيز";
+  if (level === "very_low_intervention" || level === "at_risk") {
+    return "تدخل علاجي مركز";
+  }
+
+  if (level === "low_support" || level === "needs_improvement") {
+    return "دعم تعليمي وإعادة تدريس";
+  }
+
+  if (level === "medium_follow_up") {
+    return "متابعة تعليمية وتقويم تكويني";
+  }
+
+  if ((atRiskCount || 0) > 0) {
+    return "متابعة موجهة";
+  }
+
+  if (level === "very_high" || level === "excellent") {
+    return "إثراء";
+  }
+
+  if (level === "high" || level === "mastered") {
+    return "تعزيز وتحسين";
+  }
+
   return "متابعة";
 }
 
 function getStudentAlert(level?: string) {
-  if (level === "at_risk") return "تدخل علاجي مباشر";
-  if (level === "needs_improvement") return "متابعة علاجية";
-  if (level === "excellent") return "إثراء";
-  if (level === "mastered") return "تعزيز";
+  if (level === "very_low_intervention" || level === "at_risk") {
+    return "تدخل علاجي";
+  }
+
+  if (level === "low_support" || level === "needs_improvement") {
+    return "دعم تعليمي";
+  }
+
+  if (level === "medium_follow_up") {
+    return "متابعة تعليمية";
+  }
+
+  if (level === "very_high" || level === "excellent") {
+    return "إثراء ومتابعة";
+  }
+
+  if (level === "high" || level === "mastered") {
+    return "تعزيز وتحسين";
+  }
+
   return "متابعة";
 }
 
