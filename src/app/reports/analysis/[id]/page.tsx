@@ -307,7 +307,7 @@ export default function PrintableAnalysisReportPage() {
                 barClassName="bg-teal-700"
               />
               <ChartBar
-                label={isYearEndSummaryReport ? "جيد جدًا" : "إتقان مرتفع"}
+                label={isYearEndSummaryReport ? "جيد جدا" : "إتقان مرتفع"}
                 value={studentStats.high}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-emerald-600"
@@ -343,6 +343,12 @@ export default function PrintableAnalysisReportPage() {
               </ChartCard>
             )}
 
+            {isYearEndSummaryReport ? (
+              <YearEndAveragePerformanceCard
+                value={Number(record.overall_mastery) || 0}
+                grade={getYearEndOverallGrade(Number(record.overall_mastery) || 0)}
+              />
+            ) : (
             <ChartCard title={hasDetailedSkillAnalysis ? (isYearEndSummaryReport ? "متوسط الأداء في البنود" : "إتقان المهارات") : (isYearEndSummaryReport ? "متوسط الأداء العام" : "إتقان الدرجة الكلية")}>
               {skillAnalysis.length > 0 ? (
                 skillAnalysis.slice(0, 6).map((skill: any, index: number) => (
@@ -361,6 +367,7 @@ export default function PrintableAnalysisReportPage() {
                 </p>
               )}
             </ChartCard>
+            )}
           </div>
         </Section>
 
@@ -593,7 +600,7 @@ function IndicatorsTable({
           </tr>
           <tr className="bg-slate-100">
             <IndicatorTitle title={isYearEndSummaryReport ? "ممتاز" : "إتقان مرتفع جدًا"} />
-            <IndicatorTitle title={isYearEndSummaryReport ? "جيد جدًا" : "إتقان مرتفع"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "جيد جدا" : "إتقان مرتفع"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "جيد" : "يحتاج متابعة"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "أقل من 70%" : "يحتاج دعم/تدخل"} />
           </tr>
@@ -736,6 +743,48 @@ function CompactTable({
   );
 }
 
+
+function YearEndAveragePerformanceCard({
+  value,
+  grade,
+}: {
+  value: number;
+  grade: string;
+}) {
+  const safeValue = Math.min(100, Math.max(0, Number.isFinite(value) ? value : 0));
+
+  return (
+    <div className="h-full border border-slate-300 bg-white p-3">
+      <h3 className="text-center text-sm font-black text-slate-950">
+        مؤشر متوسط الأداء العام
+      </h3>
+
+      <div className="mt-5 text-center">
+        <p className="text-3xl font-black text-teal-700">
+          {safeValue.toFixed(1)}%
+        </p>
+
+        <p className="mt-2 text-xs font-extrabold text-slate-600">
+          التقدير العام: {grade}
+        </p>
+      </div>
+
+      <div className="mt-5">
+        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className={["h-full rounded-full", getMasteryBarColor(safeValue)].join(" ")}
+            style={{ width: safeValue + "%" }}
+          />
+        </div>
+
+        <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-500">
+          <span>0%</span>
+          <span>100%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 function ChartCard({
   title,
   children,
@@ -1271,7 +1320,7 @@ function getYearEndOverallGrade(value: number) {
   }
 
   if (value >= 80) {
-    return "جيد جدًا";
+    return "جيد جدا";
   }
 
   if (value >= 70) {
