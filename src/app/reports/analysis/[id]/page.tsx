@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowRight, Printer } from "lucide-react";
+import { ArrowRight, Download, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import {
   buildEducationalRecommendation,
@@ -189,7 +189,7 @@ export default function PrintableAnalysisReportPage() {
     return value < 80;
   }).length;
 
-  const educationalRecommendation = buildEducationalRecommendation({
+  const baseEducationalRecommendation = buildEducationalRecommendation({
     overallMastery: Number(record.overall_mastery) || 0,
     studentsBelow60: studentAnalysis.filter((student: any) => (Number(student.average_mastery) || 0) < 60).length,
     studentsBetween60And70: studentAnalysis.filter((student: any) => {
@@ -206,6 +206,25 @@ export default function PrintableAnalysisReportPage() {
       .map((skill: any) => String(skill.skill || ""))
       .filter(Boolean),
   });
+  const educationalRecommendation = adaptRecommendationToAssessmentContext(
+    baseEducationalRecommendation,
+    record
+  );
+
+  function handleDownloadPdf() {
+    if (!record) {
+      return;
+    }
+
+    const currentRecord = record;
+    const previousTitle = document.title;
+    document.title = `${buildPdfFileName(currentRecord)}.pdf`;
+    window.print();
+
+    window.setTimeout(() => {
+      document.title = previousTitle;
+    }, 700);
+  }
 
   const scoreHeader = "الدرجة";
 
@@ -225,14 +244,25 @@ export default function PrintableAnalysisReportPage() {
           العودة
         </button>
 
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="inline-flex items-center gap-2 bg-teal-700 px-4 py-2 text-sm font-bold text-white"
-        >
-          <Printer size={17} />
-          طباعة
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            className="inline-flex items-center gap-2 bg-teal-700 px-4 py-2 text-sm font-bold text-white"
+          >
+            <Download size={17} />
+            تنزيل PDF
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-2 border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700"
+          >
+            <Printer size={17} />
+            طباعة
+          </button>
+        </div>
       </div>
 
       <article className="mx-auto max-w-5xl bg-white p-5 shadow-sm print:max-w-none print:p-0 print:shadow-none">
@@ -1051,4 +1081,170 @@ function getOverallLevel(percent: number) {
   if (percent >= 70) return "medium_follow_up";
   if (percent >= 60) return "low_support";
   return "very_low_intervention";
+}
+
+
+type EducationalRecommendationView = ReturnType<typeof buildEducationalRecommendation>;
+
+function adaptRecommendationToAssessmentContext(
+  recommendation: EducationalRecommendationView,
+  record: AnalysisRecord
+): EducationalRecommendationView {
+  const context = getAssessmentContext(record);
+
+  if (context === "nafs") {
+    return {
+      ...recommendation,
+      title: "توصيات تربوية لتحليل تدريب نافس",
+      summary:
+        "يركز هذا التقرير على نواتج التعلم والمهارات المستهدفة في تدريب نافس؛ لذلك تُستخدم النتائج لتحديد أولويات التدريب، وبناء دعم موجّه للطلاب، ومتابعة تقدمهم عبر دورات تدريبية قصيرة ومنظمة.",
+      suggestedActions: [
+        "ترتيب نواتج التعلم حسب الأولوية بدءًا من النواتج الأقل إتقانًا.",
+        "تنفيذ تدريبات قصيرة موجهة تحاكي المهارات المستهدفة في نافس.",
+        "متابعة تقدم الطلاب بعد كل دورة تدريبية قصيرة وليس بعد تدريب واحد فقط.",
+        "تحديد الطلاب الذين يحتاجون إلى دعم إضافي قبل الاختبار الوطني.",
+        ...recommendation.suggestedActions.slice(0, 2),
+      ],
+    };
+  }
+
+  if (context === "diagnostic") {
+    return {
+      ...recommendation,
+      title: "توصيات تربوية لاختبار تشخيصي",
+      summary:
+        "تشير نتائج الاختبار التشخيصي إلى مستوى الاستعداد القبلي لدى الطلاب قبل بناء التعلم الجديد؛ لذلك تُستخدم النتائج لتحديد الفجوات الأساسية، وتخطيط الدعم قبل بدء المعالجة الصفية أو الوحدة التعليمية.",
+      suggestedActions: [
+        "تصنيف الطلاب إلى مجموعات دعم وفق المهارات التأسيسية التي ظهر فيها ضعف واضح.",
+        "تنفيذ أنشطة تمهيدية قصيرة قبل بدء الدروس الجديدة لمعالجة الفجوات القبلية.",
+        "تخصيص تدريبات علاجية أولية للطلاب الأقل من مستوى الإتقان المقبول.",
+        "عدم الاكتفاء بالحكم النهائي على مستوى الطالب؛ لأن الغرض هنا تشخيص الاستعداد وبناء نقطة انطلاق تعليمية.",
+        ...recommendation.suggestedActions.slice(0, 2),
+      ],
+    };
+  }
+
+  if (context === "formative") {
+    return {
+      ...recommendation,
+      title: "توصيات تربوية لاختبار تكويني",
+      summary:
+        "تعكس نتائج الاختبار التكويني مستوى تقدم الطلاب أثناء التعلم؛ ولذلك ينبغي استخدامها مباشرة لتعديل التدريس، وتقديم تغذية راجعة، وإعادة معالجة المهارات التي لم يصل فيها الطلاب إلى الإتقان المطلوب.",
+      suggestedActions: [
+        "تقديم تغذية راجعة مباشرة للطلاب حول المهارات التي تحتاج إلى تحسين.",
+        "إعادة تدريس المهارات ذات الإتقان المنخفض داخل الحصة أو في حصة دعم قريبة.",
+        "تنفيذ تقويم قصير لاحق للتحقق من أثر المعالجة التعليمية.",
+        "تنويع أنشطة التعلم بين دعم موجه للمتعثرين وإثراء للطلاب المتقنين.",
+        ...recommendation.suggestedActions.slice(0, 2),
+      ],
+    };
+  }
+
+  if (context === "term_end") {
+    return {
+      ...recommendation,
+      title: "توصيات تربوية لاختبار نهاية الفصل",
+      summary:
+        "تمثل نتائج اختبار نهاية الفصل مؤشرًا ختاميًا على مستوى تحقق نواتج التعلم خلال الفصل الدراسي؛ لذلك تُستخدم النتائج في بناء تقرير تحليلي ختامي، وتحديد جوانب القوة والضعف، والتخطيط للدعم في بداية الفصل أو الوحدة التالية.",
+      suggestedActions: [
+        "إعداد ملخص للمهارات التي لم تصل إلى مستوى الإتقان المطلوب على مستوى الصف والمادة.",
+        "تضمين نتائج التحليل في خطة تحسين المادة للفصل التالي.",
+        "تصميم أنشطة دعم افتتاحية في بداية الفصل القادم للمهارات ذات الأولوية.",
+        "مشاركة التقرير مع المعلم أو الفريق المختص للاستفادة منه في التخطيط اللاحق.",
+        "عدم صياغة التوصيات على أنها معالجة فورية داخل الحصة؛ لأن الاختبار جاء في نهاية الفصل.",
+      ],
+    };
+  }
+
+  if (context === "year_end") {
+    return {
+      ...recommendation,
+      title: "توصيات تربوية لاختبار نهاية العام والانتقال",
+      summary:
+        "تعكس نتائج اختبار نهاية العام مستوى تحقق نواتج التعلم قبل انتقال الطلاب إلى صف أو مرحلة لاحقة؛ لذلك تركز التوصيات على توثيق الفاقد التعليمي، وتسليم مؤشرات واضحة للمرحلة التالية، وبناء برنامج دعم انتقالي عند الحاجة.",
+      focusStudentsNote:
+        recommendation.focusStudentsNote ||
+        "ينبغي حفظ قائمة الطلاب الذين يحتاجون إلى دعم تعليمي ليستفاد منها في التخطيط للعام الدراسي القادم.",
+      focusSkillsNote:
+        recommendation.focusSkillsNote ||
+        "ينبغي توثيق المهارات ذات الإتقان المنخفض بوصفها أولويات دعم في بداية العام أو المرحلة التالية.",
+      suggestedActions: [
+        "إعداد قائمة بالمهارات الحرجة التي يحتاج الطلاب إلى دعم فيها قبل الانتقال للمرحلة التالية.",
+        "تسليم مؤشرات الضعف والقوة للمعلم أو الفريق التعليمي في الصف أو المرحلة القادمة.",
+        "بناء برنامج دعم انتقالي أو خطة تمهيدية في بداية العام القادم لمعالجة الفاقد التعليمي.",
+        "الاستفادة من التقرير في اجتماعات تحليل النتائج واتخاذ قرارات التحسين المدرسي.",
+        "عدم الاكتفاء بتوصيات علاجية قصيرة؛ لأن نتائج نهاية العام تتطلب تخطيطًا انتقاليًا أوسع.",
+      ],
+    };
+  }
+
+  return {
+    ...recommendation,
+    title: "توصيات تربوية لاختبار ختامي",
+    summary:
+      "تعكس النتائج مستوى تحقق نواتج التعلم في هذا الاختبار، وينبغي استخدامها في بناء قرارات تحسين تعليمية تراعي توقيت الاختبار والغرض منه، مع التركيز على المهارات ذات الأولوية والطلاب المحتاجين للدعم.",
+  };
+}
+
+function getAssessmentContext(record: AnalysisRecord) {
+  const value = [
+    record.analysis_type,
+    record.assessment_timing,
+    record.report_title,
+    record.subject,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (value.includes("nafs") || value.includes("نافس")) {
+    return "nafs";
+  }
+
+  if (
+    value.includes("year_end") ||
+    value.includes("نهاية عام") ||
+    value.includes("نهاية العام") ||
+    value.includes("نهاية الفصل الدراسي الثاني") ||
+    value.includes("الفصل الدراسي الثاني") ||
+    value.includes("انتقال")
+  ) {
+    return "year_end";
+  }
+
+  if (
+    value.includes("term_end") ||
+    value.includes("semester") ||
+    value.includes("نهاية فصل") ||
+    value.includes("نهاية الفصل") ||
+    value.includes("الفصل الدراسي")
+  ) {
+    return "term_end";
+  }
+
+  if (value.includes("diagnostic") || value.includes("تشخيص")) {
+    return "diagnostic";
+  }
+
+  if (value.includes("formative") || value.includes("تكويني")) {
+    return "formative";
+  }
+
+  return "summative";
+}
+
+function buildPdfFileName(record: AnalysisRecord) {
+  const title = record.report_title || "تقرير تحليل نتائج الطلاب";
+  const subject = record.subject ? ` - ${record.subject}` : "";
+  return sanitizeFileName(`${title}${subject}`);
+}
+
+function sanitizeFileName(value: string) {
+  const cleaned = value
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 140);
+
+  return cleaned || "تقرير بصيرة";
 }
