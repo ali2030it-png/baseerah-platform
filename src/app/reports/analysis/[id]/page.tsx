@@ -562,18 +562,18 @@ function IndicatorsTable({
             <IndicatorTitle title="عدد الطلاب" />
             <IndicatorTitle title={hasDetailedSkillAnalysis ? "عدد المهارات" : "بنود التحليل"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "متوسط الأداء" : "متوسط الإتقان"} />
-            <IndicatorTitle title={isYearEndSummaryReport ? "طلاب أقل من 70%" : "طلاب بحاجة إلى متابعة أو دعم"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "التقدير العام" : "طلاب بحاجة إلى متابعة أو دعم"} />
           </tr>
           <tr>
             <IndicatorValue value={record.students_count ?? 0} />
             <IndicatorValue value={record.skills_count ?? 0} />
             <IndicatorValue value={`${record.overall_mastery ?? 0}%`} />
-            <IndicatorValue value={isYearEndSummaryReport ? studentStats.lowSupport + studentStats.veryLowIntervention : followUpCount} danger={!isYearEndSummaryReport} />
+            <IndicatorValue value={isYearEndSummaryReport ? getYearEndOverallGrade(Number(record.overall_mastery) || 0) : followUpCount} danger={!isYearEndSummaryReport} />
           </tr>
           <tr className="bg-slate-100">
-            <IndicatorTitle title={isYearEndSummaryReport ? "ممتاز (90 فأكثر)" : "إتقان مرتفع جدًا"} />
-            <IndicatorTitle title={isYearEndSummaryReport ? "جيد جدًا (80-أقل من 90)" : "إتقان مرتفع"} />
-            <IndicatorTitle title={isYearEndSummaryReport ? "جيد (70-أقل من 80)" : "يحتاج متابعة"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "ممتاز" : "إتقان مرتفع جدًا"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "جيد جدًا" : "إتقان مرتفع"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "جيد" : "يحتاج متابعة"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "أقل من 70%" : "يحتاج دعم/تدخل"} />
           </tr>
           <tr>
@@ -1241,6 +1241,23 @@ function getAssessmentContext(record: AnalysisRecord) {
   }
 
   return "summative";
+}
+
+
+function getYearEndOverallGrade(value: number) {
+  if (value >= 90) {
+    return "ممتاز";
+  }
+
+  if (value >= 80) {
+    return "جيد جدًا";
+  }
+
+  if (value >= 70) {
+    return "جيد";
+  }
+
+  return "أقل من 70%";
 }
 
 function buildPdfFileName(record: AnalysisRecord) {
