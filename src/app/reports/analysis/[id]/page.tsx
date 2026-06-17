@@ -566,7 +566,7 @@ function IndicatorsTable({
           </tr>
           <tr>
             <IndicatorValue value={record.students_count ?? 0} />
-            <IndicatorValue value={record.skills_count ?? 0} />
+            <IndicatorValue value={isYearEndSummaryReport ? studentStats.veryHigh : record.skills_count ?? 0} />
             <IndicatorValue value={`${record.overall_mastery ?? 0}%`} />
             <IndicatorValue value={isYearEndSummaryReport ? getYearEndOverallGrade(Number(record.overall_mastery) || 0) : followUpCount} danger={!isYearEndSummaryReport} />
           </tr>
