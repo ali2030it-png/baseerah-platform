@@ -213,6 +213,10 @@ export default function PrintableAnalysisReportPage() {
 
   const assessmentContext = getAssessmentContext(record);
   const isYearEndSummaryReport = assessmentContext === "year_end";
+  const yearEndAtOrAbove70Count =
+    studentStats.veryHigh + studentStats.high + studentStats.mediumFollowUp;
+  const yearEndBelow70Count =
+    studentStats.lowSupport + studentStats.veryLowIntervention;
 
   function handleDownloadPdf() {
     if (!record) {
@@ -294,7 +298,7 @@ export default function PrintableAnalysisReportPage() {
         />
 
         <Section title="الرسوم البيانية">
-          <div className="grid gap-3 md:grid-cols-2 print:grid-cols-2">
+          <div className={["grid gap-3", isYearEndSummaryReport ? "md:grid-cols-3 print:grid-cols-3" : "md:grid-cols-2 print:grid-cols-2"].join(" ")}>
             <ChartCard title={isYearEndSummaryReport ? "توزيع التقديرات" : "توزيع مستويات الطلاب"}>
               <ChartBar
                 label={isYearEndSummaryReport ? "ممتاز" : "إتقان مرتفع جدًا"}
@@ -321,6 +325,23 @@ export default function PrintableAnalysisReportPage() {
                 barClassName="bg-rose-600"
               />
             </ChartCard>
+
+            {isYearEndSummaryReport && (
+              <ChartCard title="تحقق الأداء العام">
+                <ChartBar
+                  label="70% فأعلى"
+                  value={yearEndAtOrAbove70Count}
+                  max={studentAnalysis.length || 1}
+                  barClassName="bg-teal-700"
+                />
+                <ChartBar
+                  label="أقل من 70%"
+                  value={yearEndBelow70Count}
+                  max={studentAnalysis.length || 1}
+                  barClassName="bg-amber-500"
+                />
+              </ChartCard>
+            )}
 
             <ChartCard title={hasDetailedSkillAnalysis ? (isYearEndSummaryReport ? "متوسط الأداء في البنود" : "إتقان المهارات") : (isYearEndSummaryReport ? "متوسط الأداء العام" : "إتقان الدرجة الكلية")}>
               {skillAnalysis.length > 0 ? (
