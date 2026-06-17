@@ -211,6 +211,9 @@ export default function PrintableAnalysisReportPage() {
     record
   );
 
+  const assessmentContext = getAssessmentContext(record);
+  const isYearEndSummaryReport = assessmentContext === "year_end";
+
   function handleDownloadPdf() {
     if (!record) {
       return;
@@ -287,38 +290,39 @@ export default function PrintableAnalysisReportPage() {
           studentStats={studentStats}
           followUpCount={followUpCount || studentsAtRisk.length}
           hasDetailedSkillAnalysis={hasDetailedSkillAnalysis}
+          isYearEndSummaryReport={isYearEndSummaryReport}
         />
 
         <Section title="الرسوم البيانية">
           <div className="grid gap-3 md:grid-cols-2 print:grid-cols-2">
-            <ChartCard title="توزيع مستويات الطلاب">
+            <ChartCard title={isYearEndSummaryReport ? "توزيع التقديرات" : "توزيع مستويات الطلاب"}>
               <ChartBar
-                label="إتقان مرتفع جدًا"
+                label={isYearEndSummaryReport ? "ممتاز" : "إتقان مرتفع جدًا"}
                 value={studentStats.veryHigh}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-teal-700"
               />
               <ChartBar
-                label="إتقان مرتفع"
+                label={isYearEndSummaryReport ? "جيد جدًا" : "إتقان مرتفع"}
                 value={studentStats.high}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-emerald-600"
               />
               <ChartBar
-                label="إتقان متوسط يحتاج متابعة"
+                label={isYearEndSummaryReport ? "جيد" : "إتقان متوسط يحتاج متابعة"}
                 value={studentStats.mediumFollowUp}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-amber-500"
               />
               <ChartBar
-                label="إتقان منخفض أو متدنٍ"
+                label={isYearEndSummaryReport ? "أقل من 70%" : "إتقان منخفض أو متدنٍ"}
                 value={studentStats.lowSupport + studentStats.veryLowIntervention}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-rose-600"
               />
             </ChartCard>
 
-            <ChartCard title={hasDetailedSkillAnalysis ? "إتقان المهارات" : "إتقان الدرجة الكلية"}>
+            <ChartCard title={hasDetailedSkillAnalysis ? (isYearEndSummaryReport ? "متوسط الأداء في البنود" : "إتقان المهارات") : (isYearEndSummaryReport ? "متوسط الأداء العام" : "إتقان الدرجة الكلية")}>
               {skillAnalysis.length > 0 ? (
                 skillAnalysis.slice(0, 6).map((skill: any, index: number) => (
                   <ChartBar
@@ -339,6 +343,8 @@ export default function PrintableAnalysisReportPage() {
           </div>
         </Section>
 
+        {!isYearEndSummaryReport && (
+          <>
         <Section title="الملخص التنفيذي">
           <p className="text-[11px] font-bold leading-6 text-slate-700">
             {getEducationalSummaryText(
@@ -458,6 +464,8 @@ export default function PrintableAnalysisReportPage() {
           </p>
         </Section>
 
+          </>
+        )}
         <ReportFooter
           teacherLabel={teacherLabel}
           teacherName={teacherName}
@@ -532,6 +540,7 @@ function IndicatorsTable({
   studentStats,
   followUpCount,
   hasDetailedSkillAnalysis,
+  isYearEndSummaryReport,
 }: {
   record: AnalysisRecord;
   studentStats: {
@@ -543,6 +552,7 @@ function IndicatorsTable({
   };
   followUpCount: number;
   hasDetailedSkillAnalysis: boolean;
+  isYearEndSummaryReport: boolean;
 }) {
   return (
     <section className="mt-3 overflow-hidden border border-slate-300 bg-white">
@@ -551,26 +561,26 @@ function IndicatorsTable({
           <tr className="bg-slate-100">
             <IndicatorTitle title="عدد الطلاب" />
             <IndicatorTitle title={hasDetailedSkillAnalysis ? "عدد المهارات" : "بنود التحليل"} />
-            <IndicatorTitle title="متوسط الإتقان" />
-            <IndicatorTitle title="طلاب بحاجة إلى متابعة أو دعم" />
+            <IndicatorTitle title={isYearEndSummaryReport ? "متوسط الأداء" : "متوسط الإتقان"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "طلاب أقل من 70%" : "طلاب بحاجة إلى متابعة أو دعم"} />
           </tr>
           <tr>
             <IndicatorValue value={record.students_count ?? 0} />
             <IndicatorValue value={record.skills_count ?? 0} />
             <IndicatorValue value={`${record.overall_mastery ?? 0}%`} />
-            <IndicatorValue value={followUpCount} danger />
+            <IndicatorValue value={isYearEndSummaryReport ? studentStats.lowSupport + studentStats.veryLowIntervention : followUpCount} danger={!isYearEndSummaryReport} />
           </tr>
           <tr className="bg-slate-100">
-            <IndicatorTitle title="إتقان مرتفع جدًا" />
-            <IndicatorTitle title="إتقان مرتفع" />
-            <IndicatorTitle title="يحتاج متابعة" />
-            <IndicatorTitle title="يحتاج دعم/تدخل" />
+            <IndicatorTitle title={isYearEndSummaryReport ? "ممتاز (90 فأكثر)" : "إتقان مرتفع جدًا"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "جيد جدًا (80-أقل من 90)" : "إتقان مرتفع"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "جيد (70-أقل من 80)" : "يحتاج متابعة"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "أقل من 70%" : "يحتاج دعم/تدخل"} />
           </tr>
           <tr>
             <IndicatorValue value={studentStats.veryHigh} />
             <IndicatorValue value={studentStats.high} />
             <IndicatorValue value={studentStats.mediumFollowUp} />
-            <IndicatorValue value={studentStats.lowSupport + studentStats.veryLowIntervention} danger />
+            <IndicatorValue value={studentStats.lowSupport + studentStats.veryLowIntervention} danger={!isYearEndSummaryReport} />
           </tr>
         </tbody>
       </table>
