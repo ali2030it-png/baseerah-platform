@@ -319,7 +319,7 @@ export default function PrintableAnalysisReportPage() {
                 barClassName="bg-amber-500"
               />
               <ChartBar
-                label={isYearEndSummaryReport ? "أقل من 70%" : "إتقان منخفض أو متدنٍ"}
+                label={isYearEndSummaryReport ? "أقل من 70 %" : "إتقان منخفض أو متدنٍ"}
                 value={studentStats.lowSupport + studentStats.veryLowIntervention}
                 max={studentAnalysis.length || 1}
                 barClassName="bg-rose-600"
@@ -329,13 +329,13 @@ export default function PrintableAnalysisReportPage() {
             {isYearEndSummaryReport && (
               <ChartCard title="تحقق الأداء العام">
                 <ChartBar
-                  label="70% فأعلى"
+                  label="70 % فأعلى"
                   value={yearEndAtOrAbove70Count}
                   max={studentAnalysis.length || 1}
                   barClassName="bg-teal-700"
                 />
                 <ChartBar
-                  label="أقل من 70%"
+                  label="أقل من 70 %"
                   value={yearEndBelow70Count}
                   max={studentAnalysis.length || 1}
                   barClassName="bg-amber-500"
@@ -602,7 +602,7 @@ function IndicatorsTable({
             <IndicatorTitle title={isYearEndSummaryReport ? "ممتاز" : "إتقان مرتفع جدًا"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "جيد جدا" : "إتقان مرتفع"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "جيد" : "يحتاج متابعة"} />
-            <IndicatorTitle title={isYearEndSummaryReport ? "أقل من 70%" : "يحتاج دعم/تدخل"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "أقل من 70 %" : "يحتاج دعم/تدخل"} />
           </tr>
           <tr>
             <IndicatorValue value={studentStats.veryHigh} />
@@ -1327,7 +1327,7 @@ function getYearEndOverallGrade(value: number) {
     return "جيد";
   }
 
-  return "أقل من 70%";
+  return "أقل من 70 %";
 }
 
 function buildPdfFileName(record: AnalysisRecord) {
