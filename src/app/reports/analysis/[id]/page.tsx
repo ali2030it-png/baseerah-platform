@@ -588,7 +588,7 @@ function IndicatorsTable({
         <tbody>
           <tr className="bg-slate-100">
             <IndicatorTitle title="عدد الطلاب" />
-            <IndicatorTitle title={hasDetailedSkillAnalysis ? "عدد المهارات" : "بنود التحليل"} />
+            <IndicatorTitle title={isYearEndSummaryReport ? "طلاب بتقدير ممتاز" : hasDetailedSkillAnalysis ? "عدد المهارات" : "بنود التحليل"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "متوسط الأداء" : "متوسط الإتقان"} />
             <IndicatorTitle title={isYearEndSummaryReport ? "التقدير العام" : "طلاب بحاجة إلى متابعة أو دعم"} />
           </tr>
@@ -770,14 +770,14 @@ function YearEndAveragePerformanceCard({
       </div>
 
       <div className="mt-5">
-        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+        <div dir="ltr" className="h-3 overflow-hidden rounded-full bg-slate-100">
           <div
             className={["h-full rounded-full", getMasteryBarColor(safeValue)].join(" ")}
             style={{ width: safeValue + "%" }}
           />
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-500">
+        <div dir="ltr" className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-500">
           <span>0%</span>
           <span>100%</span>
         </div>
