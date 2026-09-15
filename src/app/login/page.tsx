@@ -41,40 +41,8 @@ export default function LoginPage() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setLoading(false);
-      setError("تعذر التحقق من الحساب.");
-      return;
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role,status")
-      .eq("id", user.id)
-      .maybeSingle();
-
     setLoading(false);
-
-    if (profileError || !profile) {
-      setError("لم يتم العثور على ملف المستخدم.");
-      return;
-    }
-
-    if (profile.status !== "active") {
-      router.push("/pending");
-      return;
-    }
-
-    if (profile.role === "super_admin") {
-      router.push("/admin");
-      return;
-    }
-
-    router.push("/dashboard");
+    router.replace("/dashboard");
   }
 
   return (
