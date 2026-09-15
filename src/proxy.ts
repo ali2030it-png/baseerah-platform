@@ -51,7 +51,7 @@ export async function proxy(request: NextRequest) {
     .maybeSingle();
 
   if (!profile || profile.status !== "active") {
-    return redirectTo(request, "/pending");
+    return redirectTo(request, "/account-status");
   }
 
   const isAdminPath = pathname.startsWith("/admin");
@@ -79,7 +79,7 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/dashboard/:path*",
-    "/reports/analysis/:path*",
+    "/reports/:path*",
+    "/templates/:path*",
   ],
 };
-

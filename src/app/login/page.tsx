@@ -65,7 +65,7 @@ export default function LoginPage() {
     }
 
     if (profile.status !== "active") {
-      router.push("/pending");
+      router.push("/account-status");
       return;
     }
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
           </h1>
 
           <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
-            الحسابات الجديدة تحتاج موافقة مدير النظام قبل الدخول.
+            يتيح لك حسابك الوصول الآمن إلى خدمات منصة بصيرة.
           </p>
 
           <form onSubmit={handleLogin} className="mt-7 space-y-5">
@@ -162,8 +162,8 @@ export default function LoginPage() {
 
             <Feature
               icon={<ShieldCheck size={22} />}
-              title="اعتماد آمن"
-              text="الحسابات الجديدة تمر عبر موافقة مدير النظام."
+              title="وصول آمن"
+              text="خدمات المنصة متاحة للمستخدمين المسجلين فقط."
             />
           </div>
 

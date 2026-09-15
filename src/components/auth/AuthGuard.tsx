@@ -26,7 +26,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (!profile || profile.status !== "active") {
-        router.replace("/pending");
+        router.replace("/account-status");
         return;
       }
 
