@@ -111,6 +111,15 @@ export default function LoginPage() {
               value={password}
               onChange={setPassword}
             />
+            <button
+              type="button"
+              onClick={() =>
+                router.push("/forgot-password")
+              }
+              className="w-fit text-sm font-black text-teal-700 hover:text-teal-800"
+            >
+              نسيت كلمة المرور؟
+            </button>
 
             {error && (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center text-sm font-black text-rose-700">
