@@ -82,15 +82,15 @@ export function BasirahSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-24 hidden h-[calc(100vh-7rem)] w-[280px] shrink-0 overflow-y-auto rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm xl:block">
-      <div className="rounded-[1.5rem] bg-slate-950 p-5 text-center text-white">
-        <p className="text-xs font-black text-teal-300">منصة بصيرة</p>
+    <aside className="sticky top-24 hidden h-[calc(100vh-7rem)] w-[280px] shrink-0 overflow-y-auto rounded-[2rem] border border-[var(--border)] bg-white p-4 shadow-sm xl:block">
+      <div className="rounded-[1.5rem] bg-[var(--primary)] p-5 text-center text-white">
+        <p className="text-xs font-black text-[#8be0dd]">منصة بصيرة</p>
 
         <h2 className="mt-2 text-2xl font-black">
           تحليل نتائج الطلاب
         </h2>
 
-        <p className="mt-3 text-xs font-bold leading-6 text-slate-200">
+        <p className="mt-3 text-xs font-bold leading-6 text-white/80">
           تحويل نتائج الطلاب إلى مؤشرات إتقان وتشخيص تربوي وتوصيات قابلة للتنفيذ.
         </p>
       </div>
@@ -110,8 +110,8 @@ export function BasirahSidebar() {
               className={[
                 "flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-black transition",
                 isActive
-                  ? "border border-teal-200 bg-teal-50 text-teal-800"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-950",
+                  ? "border border-[#b9e8e6] bg-[var(--accent-soft)] text-[var(--primary)]"
+                  : "text-[var(--muted)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]",
                 isDevelopment ? "opacity-85" : "",
               ].join(" ")}
             >

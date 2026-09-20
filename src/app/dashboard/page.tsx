@@ -4,8 +4,6 @@ import {
   ClipboardCheck,
   FileSpreadsheet,
   FileText,
-  GraduationCap,
-  Send,
   Settings,
   Target,
 } from "lucide-react";
@@ -13,82 +11,84 @@ import {
 const primaryCards = [
   {
     title: "إدخال نتائج الطلاب",
-    desc: "أدخل النتائج عبر ملف Excel أو الإدخال اليدوي، ثم حوّل الدرجات إلى مؤشرات إتقان وتشخيص تربوي واضح.",
+    desc: "ابدأ بإدخال النتائج أو رفع ملف Excel لتحويل الدرجات إلى مؤشرات واضحة قابلة للتحليل.",
     href: "/dashboard/analysis/upload",
     icon: FileSpreadsheet,
     action: "ابدأ التحليل",
-    status: "ready",
+    iconStyle: "bg-[var(--accent-soft)] text-[var(--accent)]",
   },
   {
     title: "تحليل نافس",
-    desc: "خدمة مستقلة لتحليل تدريبات نواتج التعلم المستهدفة في نافس، مع تقارير تفصيلية وتوصيات تربوية.",
+    desc: "حلل نواتج التعلم المستهدفة واستخرج مؤشرات الإتقان والتشخيص والتوصيات التربوية.",
     href: "/dashboard/analysis/nafs",
     icon: BarChart3,
-    action: "فتح نافس",
-    status: "ready",
+    action: "فتح تحليل نافس",
+    iconStyle: "bg-blue-50 text-[var(--analytics)]",
   },
   {
-    title: "التقارير ومشاركة واتساب",
-    desc: "استعرض التحليلات المحفوظة، وافتح التقرير، وشاركه مع المعلم أو الموجه الطلابي عبر واتساب.",
+    title: "التقارير",
+    desc: "استعرض التحليلات المحفوظة وافتح التقارير وشارك النتائج مع أصحاب العلاقة.",
     href: "/dashboard/reports",
-    icon: Send,
+    icon: FileText,
     action: "عرض التقارير",
-    status: "ready",
+    iconStyle: "bg-emerald-50 text-[var(--success)]",
   },
 ];
 
 const secondaryCards = [
   {
     title: "الخطط العلاجية",
-    desc: "خدمة قادمة لبناء خطط الدعم والتحسين في ضوء نتائج التحليل.",
+    desc: "بناء خطط الدعم والتحسين في ضوء نتائج التحليل.",
     href: "/dashboard/remedial",
     icon: Target,
-    status: "development",
+    development: true,
   },
   {
     title: "الاختبارات والتدريبات",
-    desc: "خدمة قادمة لتنظيم الاختبارات والتدريبات التي تُبنى عليها التحليلات.",
+    desc: "تنظيم الاختبارات والتدريبات المرتبطة بنواتج التعلم.",
     href: "/dashboard/assessments",
     icon: ClipboardCheck,
-    status: "development",
+    development: true,
   },
   {
     title: "الإعدادات",
-    desc: "إعدادات المدرسة والحساب والبيانات الأساسية للمنصة.",
+    desc: "إدارة بيانات الحساب والمدرسة وإعدادات المنصة.",
     href: "/dashboard/settings",
     icon: Settings,
-    status: "ready",
+    development: false,
   },
 ];
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-8">
-      <section className="overflow-hidden rounded-[2rem] border border-teal-100 bg-gradient-to-br from-white via-teal-50/60 to-white p-6 shadow-sm md:p-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_340px] lg:items-center">
-          <div>
-            <p className="text-sm font-black text-teal-700">لوحة المستخدم</p>
-
-            <h1 className="mt-3 text-3xl font-black leading-tight text-slate-950 md:text-5xl">
-              بصيرة لتحليل نتائج التعلم والاختبارات
-            </h1>
-
-            <p className="mt-4 max-w-4xl text-sm font-bold leading-8 text-slate-600 md:text-base">
-              منصة تربوية ذكية تساعد المعلمين والمرشدين ومديري المدارس على تحويل نتائج الطلاب إلى مؤشرات إتقان، وتشخيص مهاري، وتقارير تربوية، وتوصيات عملية تدعم تحسين تعلم الطلاب.
+    <div className="space-y-7">
+      <section className="overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-white shadow-sm">
+        <div className="grid lg:grid-cols-[1fr_310px]">
+          <div className="flex flex-col justify-center p-7 md:p-9">
+            <p className="text-sm font-black text-[var(--accent)]">
+              لوحة بصيرة
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <h1 className="mt-3 max-w-3xl text-3xl font-black leading-[1.4] text-[var(--primary)] md:text-4xl">
+              من النتائج إلى قرار تعليمي أوضح
+            </h1>
+
+            <p className="mt-4 max-w-3xl text-sm font-bold leading-8 text-[var(--muted)] md:text-base">
+              حلل نتائج الطلاب واقرأ مؤشرات الإتقان وحدد جوانب التحسين من خلال مسار واضح ومترابط.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-3">
               <Link
                 href="/dashboard/analysis/upload"
-                className="inline-flex items-center gap-2 rounded-2xl bg-teal-700 px-5 py-3 text-sm font-black text-white transition hover:bg-teal-800"
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--primary-hover)]"
               >
                 <FileSpreadsheet size={18} />
-                ابدأ بإدخال النتائج
+                إدخال النتائج
               </Link>
 
               <Link
                 href="/dashboard/reports"
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-5 py-3 text-sm font-black text-[var(--primary)] transition hover:bg-[var(--primary-soft)]"
               >
                 <FileText size={18} />
                 التقارير المحفوظة
@@ -96,66 +96,81 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] bg-slate-950 p-6 text-white shadow-sm">
-            <p className="text-sm font-black text-teal-300">منصة بصيرة</p>
+          <div className="bg-[var(--primary)] p-7 text-white md:p-8">
+            <p className="text-xs font-black text-[#8be0dd]">
+              مسار العمل
+            </p>
 
-            <h2 className="mt-3 text-2xl font-black leading-9">
-              من البيانات إلى فهم أعمق وقرارات أفضل
+            <h2 className="mt-2 text-xl font-black">
+              رحلة التحليل في بصيرة
             </h2>
 
-            <p className="mt-3 text-sm font-bold leading-7 text-slate-200">
-              ابدأ بتحليل النتائج، ثم راجع التقرير وشاركه مع أصحاب العلاقة لدعم القرار التعليمي.
-            </p>
+            <div className="mt-6 space-y-4">
+              <JourneyStep number="01" title="إدخال النتائج" />
+              <JourneyStep number="02" title="تحليل المؤشرات" />
+              <JourneyStep number="03" title="قراءة التشخيص" />
+              <JourneyStep number="04" title="التقارير والمتابعة" />
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {primaryCards.map((card) => {
-          const Icon = card.icon;
+      <section>
+        <div className="mb-4">
+          <p className="text-sm font-black text-[var(--accent)]">
+            الخدمات الأساسية
+          </p>
 
-          return (
-            <Link
-              key={card.title}
-              href={card.href}
-              className="group rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-md"
-            >
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-teal-50 text-teal-700">
-                  <Icon size={25} />
+          <h2 className="mt-1 text-2xl font-black text-[var(--primary)]">
+            ابدأ من هنا
+          </h2>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          {primaryCards.map((card) => {
+            const Icon = card.icon;
+
+            return (
+              <Link
+                key={card.title}
+                href={card.href}
+                className="group flex min-h-[230px] flex-col rounded-[1.5rem] border border-[var(--border)] bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#b9d7df] hover:shadow-md"
+              >
+                <div
+                  className={`grid h-12 w-12 place-items-center rounded-2xl ${card.iconStyle}`}
+                >
+                  <Icon size={23} />
                 </div>
 
-                <StatusBadge status={card.status} />
-              </div>
+                <h3 className="mt-5 text-xl font-black text-[var(--primary)]">
+                  {card.title}
+                </h3>
 
-              <h3 className="text-xl font-black text-slate-950">{card.title}</h3>
+                <p className="mt-3 text-sm font-bold leading-7 text-[var(--muted)]">
+                  {card.desc}
+                </p>
 
-              <p className="mt-3 min-h-[72px] text-sm font-bold leading-7 text-slate-600">
-                {card.desc}
-              </p>
-
-              <p className="mt-5 text-sm font-black text-teal-700">
-                {card.action}
-              </p>
-            </Link>
-          );
-        })}
+                <p className="mt-auto pt-5 text-sm font-black text-[var(--accent)]">
+                  {card.action}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
-      <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-black text-teal-700">خدمات مساندة</p>
+      <section className="rounded-[1.75rem] border border-[var(--border)] bg-white p-6 shadow-sm">
+        <div className="mb-5">
+          <p className="text-sm font-black text-[var(--accent)]">
+            خدمات إضافية
+          </p>
 
-            <h2 className="mt-1 text-2xl font-black text-slate-950">
-              أدوات تنظيمية داخل بصيرة
-            </h2>
-          </div>
-
-          <GraduationCap className="text-teal-700" size={30} />
+          <h2 className="mt-1 text-xl font-black text-[var(--primary)]">
+            أدوات تدعم رحلة العمل
+          </h2>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-3">
           {secondaryCards.map((card) => {
             const Icon = card.icon;
 
@@ -163,19 +178,25 @@ export default function DashboardPage() {
               <Link
                 key={card.title}
                 href={card.href}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white hover:shadow-sm"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-5 transition hover:bg-white hover:shadow-sm"
               >
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-white text-teal-700">
-                    <Icon size={22} />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[var(--primary)]">
+                    <Icon size={20} />
                   </div>
 
-                  <StatusBadge status={card.status} />
+                  {card.development && (
+                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700">
+                      قريبًا
+                    </span>
+                  )}
                 </div>
 
-                <h3 className="font-black text-slate-950">{card.title}</h3>
+                <h3 className="mt-4 font-black text-[var(--primary)]">
+                  {card.title}
+                </h3>
 
-                <p className="mt-2 text-sm font-bold leading-7 text-slate-600">
+                <p className="mt-2 text-sm font-bold leading-6 text-[var(--muted)]">
                   {card.desc}
                 </p>
               </Link>
@@ -187,18 +208,22 @@ export default function DashboardPage() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  if (status === "development") {
-    return (
-      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700 ring-1 ring-amber-200">
-        تحت التطوير
-      </span>
-    );
-  }
-
+function JourneyStep({
+  number,
+  title,
+}: {
+  number: string;
+  title: string;
+}) {
   return (
-    <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-black text-teal-700 ring-1 ring-teal-200">
-      جاهز
-    </span>
+    <div className="flex items-center gap-3">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-xs font-black text-[#8be0dd]">
+        {number}
+      </span>
+
+      <span className="text-sm font-black text-white/90">
+        {title}
+      </span>
+    </div>
   );
 }

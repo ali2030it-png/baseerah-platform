@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BarChart3,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -42,16 +41,16 @@ export function AdminSidebar() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 right-0 z-50 hidden w-72 border-l border-slate-200 bg-white p-5 shadow-sm lg:flex lg:flex-col">
-        <div className="rounded-[1.5rem] bg-slate-950 p-5 text-white">
-          <p className="text-xs font-black text-teal-300">مركز القيادة</p>
+      <aside className="fixed inset-y-0 right-0 z-50 hidden w-72 border-l border-[var(--border)] bg-white p-5 shadow-sm lg:flex lg:flex-col">
+        <div className="rounded-[1.5rem] bg-[var(--primary)] p-5 text-white">
+          <p className="text-xs font-black text-[#8be0dd]">مركز القيادة</p>
           <h2 className="mt-2 text-2xl font-black">لوحة مدير النظام</h2>
-          <p className="mt-3 text-xs font-bold leading-6 text-slate-300">
+          <p className="mt-3 text-xs font-bold leading-6 text-white/80">
             إدارة الحسابات ومتابعة الإحصاءات العامة للمنصة.
           </p>
         </div>
 
-        <div className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-teal-50 px-4 py-3 text-sm font-black text-teal-800">
+        <div className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[var(--accent-soft)] px-4 py-3 text-sm font-black text-[var(--primary)]">
           <ShieldCheck size={18} />
           صلاحيات المدير العام
         </div>
@@ -70,8 +69,8 @@ export function AdminSidebar() {
                 className={[
                   "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-black transition",
                   active
-                    ? "bg-teal-700 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-teal-700",
+                    ? "bg-[var(--primary)] text-white shadow-sm"
+                    : "text-[var(--muted)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]",
                 ].join(" ")}
               >
                 <item.icon size={19} />
@@ -93,7 +92,7 @@ export function AdminSidebar() {
         </div>
       </aside>
 
-      <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 p-3 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-50 border-b border-[var(--border)] bg-white/95 p-3 backdrop-blur lg:hidden">
         <div className="flex items-center gap-2 overflow-x-auto">
           {adminItems.map((item) => {
             const active =
@@ -108,8 +107,8 @@ export function AdminSidebar() {
                 className={[
                   "inline-flex shrink-0 items-center gap-2 rounded-2xl px-4 py-3 text-xs font-black",
                   active
-                    ? "bg-teal-700 text-white"
-                    : "bg-slate-50 text-slate-700",
+                    ? "bg-[var(--primary)] text-white"
+                    : "bg-[var(--background)] text-[var(--primary)]",
                 ].join(" ")}
               >
                 <item.icon size={17} />

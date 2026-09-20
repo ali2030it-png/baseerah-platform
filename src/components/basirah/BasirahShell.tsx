@@ -10,7 +10,7 @@ export function BasirahShell({
   return (
     <div
       dir="rtl"
-      className="min-h-screen bg-[#f6f8fb] text-slate-950"
+      className="min-h-screen bg-[var(--background)] text-[var(--foreground)]"
     >
       <BasirahTopbar />
 

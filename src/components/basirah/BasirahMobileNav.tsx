@@ -47,7 +47,7 @@ export function BasirahMobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-2 py-2 backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-white/95 px-2 py-2 backdrop-blur lg:hidden">
       <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
         {items.map((item) => {
           const active =
@@ -62,8 +62,8 @@ export function BasirahMobileNav() {
               className={[
                 "flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-black transition",
                 active
-                  ? "bg-teal-50 text-teal-800"
-                  : "text-slate-500",
+                  ? "bg-[var(--accent-soft)] text-[var(--primary)]"
+                  : "text-[var(--muted)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]",
               ].join(" ")}
             >
               <item.icon size={18} />
@@ -76,5 +76,3 @@ export function BasirahMobileNav() {
     </nav>
   );
 }
-
-

@@ -19,12 +19,12 @@ export default function LoginPage() {
     setError("");
 
     if (!email.trim() || !email.includes("@")) {
-      setError("أدخل البريد الإلكتروني بشكل صحيح.");
+      setError("╪ث╪»╪«┘ ╪د┘╪ذ╪▒┘è╪» ╪د┘╪ح┘┘â╪ز╪▒┘ê┘┘è ╪ذ╪┤┘â┘ ╪╡╪ص┘è╪ص.");
       return;
     }
 
     if (!password) {
-      setError("أدخل كلمة المرور.");
+      setError("╪ث╪»╪«┘ ┘â┘┘à╪ر ╪د┘┘à╪▒┘ê╪▒.");
       return;
     }
 
@@ -37,7 +37,7 @@ export default function LoginPage() {
 
     if (loginError) {
       setLoading(false);
-      setError("تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.");
+      setError("╪ز╪╣╪░╪▒ ╪ز╪│╪ش┘è┘ ╪د┘╪»╪«┘ê┘. ╪ز╪ص┘é┘é ┘à┘ ╪د┘╪ذ╪▒┘è╪» ┘ê┘â┘┘à╪ر ╪د┘┘à╪▒┘ê╪▒.");
       return;
     }
 
@@ -47,7 +47,7 @@ export default function LoginPage() {
 
     if (!user) {
       setLoading(false);
-      setError("تعذر التحقق من الحساب.");
+      setError("╪ز╪╣╪░╪▒ ╪د┘╪ز╪ص┘é┘é ┘à┘ ╪د┘╪ص╪│╪د╪ذ.");
       return;
     }
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (profileError || !profile) {
-      setError("لم يتم العثور على ملف المستخدم.");
+      setError("┘┘à ┘è╪ز┘à ╪د┘╪╣╪س┘ê╪▒ ╪╣┘┘ë ┘à┘┘ ╪د┘┘à╪│╪ز╪«╪»┘à.");
       return;
     }
 
@@ -78,106 +78,155 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50" dir="rtl">
-      <div className="mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 py-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="order-2 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8 lg:order-1">
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-950 text-white">
-            <ArrowRight size={26} />
-          </div>
+    <main
+      dir="rtl"
+      className="relative grid min-h-screen place-items-center overflow-hidden bg-[#eef3f5] px-4 py-8 sm:px-6"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-[-120px] top-[-120px] h-[360px] w-[360px] rounded-full bg-[#d9efee] opacity-80 blur-3xl"
+      />
 
-          <p className="mt-7 text-sm font-black text-teal-700">
-            تسجيل الدخول
-          </p>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-[-160px] left-[-100px] h-[420px] w-[420px] rounded-full bg-[#dfeaf4] opacity-80 blur-3xl"
+      />
 
-          <h1 className="mt-2 text-3xl font-black text-slate-950">
-            دخول منصة بصيرة
-          </h1>
-
-          <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
-            يتيح لك حسابك الوصول الآمن إلى خدمات منصة بصيرة.
-          </p>
-
-          <form onSubmit={handleLogin} className="mt-7 space-y-5">
-            <Input
-              label="البريد الإلكتروني"
-              type="email"
-              value={email}
-              onChange={setEmail}
-            />
-
-            <Input
-              label="كلمة المرور"
-              type="password"
-              value={password}
-              onChange={setPassword}
-            />
-            <button
-              type="button"
-              onClick={() =>
-                router.push("/forgot-password")
-              }
-              className="w-fit text-sm font-black text-teal-700 hover:text-teal-800"
+      <div className="relative z-10 w-full max-w-[540px]">
+        <section className="overflow-hidden rounded-[2rem] border border-[#c7d4da] bg-white shadow-[0_30px_90px_rgba(21,68,90,0.14)]">
+          <div className="relative overflow-hidden border-b border-[#cbd9de] bg-[linear-gradient(135deg,#e8f4f4_0%,#eef6f7_55%,#f2f7fa_100%)] px-6 py-7 sm:px-9 sm:py-8">
+            <div
+              aria-hidden="true"
+              className="absolute -left-6 -top-5 grid grid-cols-4 gap-2 opacity-75"
             >
-              نسيت كلمة المرور؟
-            </button>
+              <span className="h-10 w-2 rounded-full bg-[#0da9a6]/35" />
+              <span className="mt-4 h-6 w-2 rounded-full bg-[#3d7eb9]/35" />
+              <span className="mt-7 h-3 w-2 rounded-full bg-[#0da9a6]/45" />
+              <span className="mt-2 h-8 w-2 rounded-full bg-[#3d7eb9]/30" />
+            </div>
 
-            {error && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center text-sm font-black text-rose-700">
-                {error}
+            <div className="relative flex items-start justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="h-9 w-1.5 rounded-full bg-[var(--accent)]" />
+
+                  <div>
+                    <p className="text-[1.75rem] font-black leading-none text-[var(--primary)]">
+                      بصيرة
+                    </p>
+
+                    <p className="mt-2 text-xs font-bold text-[#526b78]">
+                      تحليل التعلم وصناعة القرار
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#bfd5da] bg-white/90 px-3.5 py-2 text-[11px] font-black text-[var(--primary)] shadow-sm">
+                  <BarChart3 size={15} className="text-[#087e7c]" />
+                  منصة تحليل نتائج التعلم
+                </div>
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-14 w-full rounded-2xl bg-teal-700 text-sm font-black text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "جارٍ التحقق..." : "دخول"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => router.push("/signup")}
-              className="w-full text-center text-sm font-black text-teal-700"
-            >
-              لا تملك حسابًا؟ إنشاء حساب
-            </button>
-          </form>
-        </section>
-
-        <section className="order-1 overflow-hidden rounded-[2.5rem] border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-slate-100 p-8 lg:order-2">
-          <div className="mb-8">
-            <img
-              src="/baseerah-header-logo.png"
-              alt="بصيرة"
-              className="h-24 w-auto object-contain"
-            />
+              <div className="hidden rounded-2xl border border-[#cbd9de] bg-white/85 p-3 shadow-sm sm:block">
+                <div className="flex h-14 items-end gap-1.5">
+                  <span className="h-5 w-2 rounded-full bg-[#7fc3c0]" />
+                  <span className="h-9 w-2 rounded-full bg-[#43aaa6]" />
+                  <span className="h-7 w-2 rounded-full bg-[#79a9cf]" />
+                  <span className="h-12 w-2 rounded-full bg-[#0da9a6]" />
+                  <span className="h-10 w-2 rounded-full bg-[#3d7eb9]" />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <h2 className="mt-6 max-w-2xl text-5xl font-black leading-tight text-slate-950">
-            من الأرقام إلى القرار التربوي
-          </h2>
+          <div className="px-6 py-7 sm:px-9 sm:py-8">
+            <header>
+              <p className="text-sm font-black text-[#087e7c]">
+                بوابة المستخدم
+              </p>
 
-          <p className="mt-5 max-w-2xl text-base font-bold leading-8 text-slate-600">
-            سجّل دخولك لتحليل نتائج الطلاب، وتشخيص نواتج التعلم، وبناء تقارير تربوية تدعم التحسين والمتابعة.
-          </p>
+              <h1 className="mt-2 text-3xl font-black leading-tight text-[var(--primary)]">
+                مرحبًا بعودتك
+              </h1>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <Feature
-              icon={<BarChart3 size={22} />}
-              title="تحليل إتقان"
-              text="تحويل الدرجات إلى مؤشرات واضحة."
-            />
+              <p className="mt-2.5 text-sm font-bold leading-7 text-[#526b78]">
+                أدخل بيانات حسابك للوصول إلى التحليلات والتقارير وخدمات بصيرة.
+              </p>
+            </header>
 
-            <Feature
-              icon={<ShieldCheck size={22} />}
-              title="وصول آمن"
-              text="خدمات المنصة متاحة للمستخدمين المسجلين فقط."
-            />
+            <form onSubmit={handleLogin} className="mt-7 space-y-4">
+              <Input
+                label="البريد الإلكتروني"
+                type="email"
+                value={email}
+                onChange={setEmail}
+                autoComplete="email"
+              />
+
+              <Input
+                label="كلمة المرور"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                autoComplete="current-password"
+              />
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => router.push("/forgot-password")}
+                  className="text-sm font-black text-[#087e7c] transition hover:text-[#066765]"
+                >
+                  نسيت كلمة المرور؟
+                </button>
+              </div>
+
+              {error && (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-black text-rose-700"
+                >
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-black text-white shadow-[0_10px_25px_rgba(21,68,90,0.18)] transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span>
+                  {loading ? "جارٍ التحقق..." : "تسجيل الدخول"}
+                </span>
+
+                <ArrowRight size={18} className="rotate-180" />
+              </button>
+            </form>
+
+            <div className="mt-6 flex items-center justify-center gap-2 text-center">
+              <span className="text-sm font-bold text-[#526b78]">
+                ليس لديك حساب؟
+              </span>
+
+              <button
+                type="button"
+                onClick={() => router.push("/signup")}
+                className="text-sm font-black text-[#087e7c] transition hover:text-[#066765]"
+              >
+                إنشاء حساب جديد
+              </button>
+            </div>
+
+            <div className="mt-7 flex items-center justify-center gap-2 border-t border-[#d1dce1] pt-5 text-xs font-bold text-[#526b78]">
+              <ShieldCheck size={15} className="text-[#087e7c]" />
+              <span>الدخول وفق حساب المستخدم وصلاحياته</span>
+            </div>
           </div>
-
-
         </section>
+
+        <p className="mt-5 text-center text-[11px] font-bold text-[#526b78]">
+          بصيرة · تحليل نتائج التعلم ودعم القرار التربوي
+        </p>
       </div>
     </main>
   );
@@ -188,42 +237,27 @@ function Input({
   value,
   onChange,
   type = "text",
+  autoComplete,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
+  autoComplete?: string;
 }) {
   return (
     <label className="grid gap-2">
-      <span className="text-sm font-black text-slate-700">{label}</span>
+      <span className="text-sm font-black text-[var(--primary)]">
+        {label}
+      </span>
+
       <input
         type={type}
         value={value}
+        autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black outline-none transition focus:border-teal-600 focus:bg-white"
+        className="h-14 w-full rounded-xl border border-[#c5d2d8] bg-white px-4 text-sm font-bold text-[var(--primary)] outline-none transition hover:border-[#9eb5bf] focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
       />
     </label>
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  text,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-teal-50 text-teal-700">
-        {icon}
-      </div>
-
-      <p className="font-black text-slate-950">{title}</p>
-      <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{text}</p>
-    </div>
   );
 }

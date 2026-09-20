@@ -1,18 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f8fb;
-  --foreground: #0f172a;
+  --background: #f7f9fa;
+  --foreground: #15445a;
 
   --card: #ffffff;
-  --border: #e2e8f0;
+  --border: #d9e1e5;
 
-  --primary: #0f766e;
-  --primary-light: #ccfbf1;
+  --primary: #15445a;
+  --primary-hover: #10394c;
+  --primary-soft: #eaf1f4;
 
-  --muted: #64748b;
+  --accent: #0da9a6;
+  --accent-hover: #0a8f8c;
+  --accent-soft: #e8f8f7;
+
+  --analytics: #3d7eb9;
+  --success: #07a869;
+  --highlight: #c1b489;
+  --neutral: #c2c1c1;
+
+  --muted: #607583;
 
   --radius-xl: 2rem;
+
+  --font-basirah: "IBM Plex Sans Arabic", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 html {
@@ -53,9 +65,6 @@ textarea {
 }
 
 
-:root {
-  --font-basirah: "IBM Plex Sans Arabic", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
 
 html,
 body,
