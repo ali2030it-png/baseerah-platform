@@ -36,18 +36,19 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
 
-  if (!user) {
+  const userId = claimsData?.claims?.sub;
+
+  if (claimsError || !userId) {
     return redirectTo(request, "/login");
   }
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("role,status")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
   if (!profile || profile.status !== "active") {
